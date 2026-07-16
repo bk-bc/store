@@ -1,0 +1,11 @@
+<div id="classify" class="section">
+    <div class="flex-row">
+        <select id="classifySelect" onchange="handleClassifySelect()">
+            <option value="">選擇分類</option>
+            <option value="NEW_CATEGORY">-- 新增分類 --</option>
+        </select>
+        <input type="text" id="newCategoryInput" placeholder="輸入新分類名稱" style="display:none; flex:1; margin-bottom:0;">
+        <button class="btn-primary" onclick="applyClassification()">分類</button>
+    </div>
+    <div id="classifyResult"></div>
+</div>

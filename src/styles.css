@@ -1,0 +1,514 @@
+:root {
+    --primary: #007bff; --success: #28a745; --danger: #dc3545; --warning: #ffc107;
+    --pink: hotpink; --yellow: gold; --lightblue: lightblue;
+    --bg-color: #f4f6f9; --card-bg: #ffffff;
+}
+* { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { margin: 0; padding: 0; background-color: var(--bg-color); padding-bottom: 60px; }
+
+/* Sticky Header */
+header {
+    position: sticky; top: 0; z-index: 1000; background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 10px; margin-bottom: 15px;
+}
+.header-stats { font-size: 0.85em; color: #666; margin-bottom: 5px; }
+.nav-buttons { display: flex; flex-wrap: wrap; gap: 5px; }
+.nav-buttons button { flex: 1 1 auto; padding: 8px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 4px; cursor: pointer; }
+.nav-buttons button.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* Layout & Cards */
+.container { padding: 0 10px; max-width: 100%; margin: 0 auto; }
+.section { display: none; }
+.section.active { display: block; }
+
+/* =============================================
+   修正1：卡片基礎樣式 - 移除重複定義，統一為一份
+   ============================================= */
+.card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    word-break: break-all;
+}
+
+/* =============================================
+   修正2：card-title 移除固定高度，讓文字自然展開
+   ============================================= */
+.card-title {
+    font-weight: bold;
+    font-size: 1em;
+    margin-bottom: 5px;
+    word-break: break-all;
+    white-space: normal;
+    line-height: 1.3;
+}
+.card-sub { font-size: 0.85em; color: #555; margin-bottom: 5px; word-break: break-all; }
+.card-actions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.card-down { background-color: #ffe6ee; }
+.down-label {
+    color: #c2185b;
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-bottom: 3px;
+}
+.no-print button, .btn-danger, .btn-warning {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+}
+
+/* Inputs & Buttons */
+input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+button { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-success { background: var(--success); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-warning { background: var(--warning); color: black; }
+.btn-pink { background: var(--pink); color: white; }
+.btn-yellow { background: var(--yellow); color: black; }
+.btn-lightblue { background: var(--lightblue); color: black; }
+
+.flex-row { display: flex; gap: 10px; flex-wrap: nowrap; align-items: center; margin-bottom: 10px; }
+.flex-row > * { flex: 1; }
+
+svg.barcode { width: 100%; max-height: 80px; }
+
+/* 品保：動態多頁分欄，基準為A4列印寬度 */
+.qa-print-container { display: none; }
+.qa-screen-container { display: block; }
+
+/* 外層包裝：控制縮放後的實際佔位高度 */
+#qaResultWrapper {
+    width: 100%;
+    overflow: hidden;
+}
+
+/* 主容器：固定730px寬，由JS動態scale縮放適應螢幕 */
+#qaResult {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 730px;
+    transform-origin: top left;
+    /* transform: scale(X) 由 JS 動態寫入 */
+}
+
+/* 每頁：左右兩欄並排 */
+.qa-page-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 6px;
+    width: 730px;
+    margin-bottom: 0;
+}
+
+/* 頁間強制換頁符（螢幕顯示為空白間距，列印時強制換頁）*/
+.qa-page-break {
+    width: 100%;
+    height: 60px;  /* 螢幕上的頁間距 */
+}
+
+/* 每欄固定362px */
+.qa-col {
+    flex: 0 0 362px;
+    width: 362px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* 每個日期群組 */
+.qa-group {
+    border: 2px solid #333;
+    border-radius: 6px;
+    padding: 6px;
+    background: #fff;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    width: 100%;
+    box-sizing: border-box;
+}
+.qa-group-title {
+    font-weight: bold;
+    font-size: 0.9em;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 5px;
+    padding-bottom: 3px;
+    overflow: hidden;
+}
+
+/* 群組內商品：單欄堆疊 */
+.qa-items-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.qa-items-col { display: none; } /* 舊的兩欄，不再使用 */
+
+/* 商品卡片內部：左右並排 */
+.qa-item-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+.qa-item-left {
+    flex: 1 1 0;
+    min-width: 0;
+}
+.qa-item-right {
+    flex: 0 0 45%;
+    max-width: 45%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.qa-item-right .barcode {
+    width: 100%;
+    height: auto;
+    max-height: 55px;
+}
+
+/* 商品卡片 */
+.qa-item-card {
+    border: 1px dashed #999;
+    border-radius: 3px;
+    padding: 4px;
+    text-align: center;
+    background: rgba(255,255,255,0.8);
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+.qa-item-title {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.25;
+    word-break: break-all;
+    margin-bottom: 2px;
+}
+.qa-item-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 3px;
+    gap: 3px;
+}
+/* 數量 -/+ 按鈕 */
+.qa-qty-btn {
+    background: #5bc4b0;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+.qa-qty-num {
+    font-size: 15px;
+    font-weight: bold;
+    min-width: 20px;
+    text-align: center;
+}
+/* 列印時名稱後的 *數量 標記 */
+.qa-qty-badge {
+    display: inline-block;
+    background: #e0e0e0;
+    color: #333;
+    font-size: 0.85em;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-left: 4px;
+    font-weight: normal;
+}
+
+.qa-add-panel {
+    display: none;
+    margin-bottom: 12px;
+}
+.qa-add-result {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.qa-add-result button {
+    width: 100%;
+    text-align: left;
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.qa-add-result .qa-result-id {
+    font-weight: bold;
+    color: #007bff;
+}
+.qa-add-selected {
+    display: none;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+.qa-date-group {
+    margin-bottom: 10px;
+}
+.qa-date-group-title {
+    font-weight: bold;
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 5px;
+}
+.qa-date-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.qa-date-buttons button {
+    flex: 0 0 auto;
+    min-width: 48px;
+    background: #f8f9fa;
+    color: #222;
+    border: 1px solid #ddd;
+}
+.qa-date-buttons button.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+.qa-add-status {
+    color: #28a745;
+    font-weight: bold;
+    margin-top: 8px;
+    min-height: 20px;
+}
+
+/* 品保三色 */
+.bg-month-current { background-color: #ffe6e6 !important; }
+.bg-month-next    { background-color: #ffe5b4 !important; }
+.bg-month-future  { background-color: #ffffcc !important; }
+
+/* =============================================
+   修正3：搜尋網格 - 手機預設兩欄，平板/桌機四欄
+   ============================================= */
+.search-grid-container {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.search-column {
+    flex: 0 0 50%;       /* 手機：兩欄 */
+    max-width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+/* 平板以上：五欄 */
+@media screen and (min-width: 900px) {
+    .search-column {
+        flex: 0 0 20%;
+        max-width: 20%;
+    }
+}
+
+.card svg.barcode {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 60px;
+}
+
+/* =============================================
+   列印樣式
+   ============================================= */
+@media print {
+    /* 隱藏不需要列印的元素 */
+    header, .no-print, .card-sub { display: none !important; }
+    body { padding: 0; background: white; }
+    .container { padding: 0; }
+
+    /* ══════════════════════════════════════════
+       搜尋列印
+       • 高度 -10%：267mm → 240mm
+       • justify-content: flex-start（不拉寬間距）
+       • 文字 180%、白動跨行（不限行數、不裁切）
+       • 條碼固定高度，卡片高度自動由文字+條碼撐開
+       ══════════════════════════════════════════ */
+    .search-grid-container {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: flex-start !important;
+        width: 100% !important;
+        /* 不給固定高度，讓卡片自然堆疊 */
+    }
+    .search-column {
+        flex: 0 0 20% !important;
+        max-width: 20% !important;
+        padding: 0 2px !important;
+        gap: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;  /* 不拉寬間距 */
+        align-items: stretch !important;
+    }
+
+    /* 卡片：高度由內容決定，每張約佔 240mm/12 = 20mm */
+    .search-column .card {
+        height: calc(240mm / 12) !important;     /* -10%後每格高度 */
+        overflow: hidden !important;
+        border: 0.5pt solid #000 !important;
+        margin: 0 0 1px 0 !important;
+        padding: 2px 3px !important;
+        box-shadow: none !important;
+        border-radius: 1px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 文字：180%、自動跨行、不裁切行數 */
+    .search-column .card-title {
+        font-size: 18px !important;              /* 180%（基準約10px） */
+        font-weight: bold !important;
+        line-height: 1.25 !important;
+        white-space: normal !important;
+        overflow: hidden !important;
+        word-break: break-all !important;
+        margin: 0 0 2px 0 !important;
+        flex-shrink: 0 !important;
+        /* 不加 -webkit-line-clamp，讓文字自然跨行 */
+    }
+
+    /* 條碼：撐滿卡片剩餘空間 */
+    .search-column .barcode-wrapper {
+        flex: 1 1 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+        min-height: 0 !important;
+    }
+    .search-column .barcode {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 31px !important;
+        display: block !important;
+    }
+
+    /* ══════════════════════════════════════════
+       品保列印：直接沿用螢幕動態分欄佈局
+       ══════════════════════════════════════════ */
+    .qa-screen-container, .qa-print-container { display: none !important; }
+
+    #qaResultWrapper {
+        width: 100% !important;
+        height: auto !important;
+    }
+    #qaResult {
+        display: block !important;
+        width: 100% !important;
+        transform: none !important;
+        margin: 0 !important;
+    }
+    .qa-page-row {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        gap: 5px !important;
+        width: 100% !important;
+        break-inside: avoid-page !important;
+        page-break-inside: avoid !important;
+    }
+    /* iOS Safari：換頁 div 必須在 block 容器內才有效 */
+    .qa-page-break {
+        display: block !important;
+        width: 100% !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        page-break-after: always !important;
+        break-after: page !important;
+    }
+    .qa-col {
+        flex: 1 1 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+    .qa-group {
+        border: 1pt solid #333 !important;
+        border-radius: 2px !important;
+        padding: 3px !important;
+        margin-bottom: 4px !important;
+        box-shadow: none !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+    .qa-group-title {
+        font-size: 15px !important;
+        padding-bottom: 3px !important;
+        margin-bottom: 5px !important;
+    }
+    .qa-item-card {
+        border: 0.5pt dashed #666 !important;
+        padding: 2px !important;
+        box-shadow: none !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+    .qa-item-inner {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 5px !important;
+    }
+    .qa-item-left {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+    }
+    .qa-item-right {
+        flex: 0 0 45% !important;
+        max-width: 45% !important;
+    }
+    .qa-item-right .barcode {
+        width: 100% !important;
+        height: 35px !important;
+        display: block !important;
+    }
+    .qa-item-title {
+        font-size: 14px !important;
+    }
+    .qa-item-actions { display: none !important; }
+    .qa-qty-badge {
+        display: inline-block !important;
+        background: #e0e0e0 !important;
+        color: #333 !important;
+        font-size: 0.85em !important;
+        padding: 1px 5px !important;
+        border-radius: 3px !important;
+        margin-left: 4px !important;
+    }
+    .qa-item-card .barcode {
+        width: 95% !important;
+        height: 28px !important;
+        display: block !important;
+        margin: 0 auto !important;
+    }
+}

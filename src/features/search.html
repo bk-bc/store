@@ -1,0 +1,20 @@
+<div id="search" class="section active">
+    <div class="flex-row no-print">
+        <label><input type="checkbox" id="freshFoodCheck" onchange="renderSearch()"> 鮮食</label>
+        <label><input type="checkbox" id="shortcutToggle" checked onchange="renderSearch()"> 快捷鍵</label>
+        <button class="btn-success" onclick="clearOrder()">已訂貨</button>
+        <button class="btn-primary" onclick="window.print()">🖨️ 列印標籤</button>
+    </div>
+    <div id="searchFilters" class="no-print">
+        <div class="flex-row">
+            <select id="searchC1" onchange="renderSearch()"><option value="">C1: 全部搜尋</option></select>
+            <select id="searchEvent" onchange="renderSearch()"><option value="">Event: 全部搜尋</option></select>
+        </div>
+        <div class="flex-row">
+            <input type="text" id="searchKeyword1" placeholder="關鍵字 1 (ID/Name)" oninput="renderSearch()">
+            <input type="text" id="searchKeyword2" placeholder="關鍵字 2 (ID/Name)" oninput="renderSearch()">
+        </div>
+    </div>
+    <div class="header-stats no-print" id="searchCount"></div>
+    <div id="searchResult"></div>
+</div>

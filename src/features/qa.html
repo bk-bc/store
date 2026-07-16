@@ -1,0 +1,65 @@
+<div id="qa" class="section">
+    <div class="nav-buttons no-print" style="margin-bottom: 10px;">
+        <button onclick="switchQAMode('add')" id="qaModeAdd">新增</button>
+        <button onclick="switchQAMode('batch')" id="qaModeBatch">批量</button>
+        <button onclick="switchQAMode('list')" id="qaModeList" class="active">清單</button>
+    </div>
+    <div class="flex-row no-print" id="qaListToolbar">
+        <label><input type="checkbox" id="qaBarcodeToggle" checked onchange="renderQA()"> 顯示條碼</label>
+        <button class="btn-primary" onclick="window.print()">列印</button>
+    </div>
+    <div id="qaAddPanel" class="qa-add-panel no-print">
+        <input type="text" id="qaAddSearchInput" placeholder="輸入至少三個字搜尋 ID/Name" oninput="renderQAAddSearch()">
+        <div id="qaAddSearchResult" class="qa-add-result"></div>
+        <div id="qaAddSelected" class="qa-add-selected"></div>
+        <div id="qaAddDatePanel" style="display:none;">
+            <div class="qa-date-group">
+                <div class="qa-date-group-title">年份</div>
+                <div id="qaYearButtons" class="qa-date-buttons"></div>
+            </div>
+            <div class="qa-date-group">
+                <div class="qa-date-group-title">月份</div>
+                <div id="qaMonthButtons" class="qa-date-buttons"></div>
+            </div>
+            <div class="qa-date-group">
+                <div class="qa-date-group-title">日期</div>
+                <div id="qaDayButtons" class="qa-date-buttons"></div>
+            </div>
+            <div class="qa-date-group">
+                <div class="qa-date-group-title">數量</div>
+                <div id="qaQtyButtons" class="qa-date-buttons"></div>
+            </div>
+            <button class="btn-primary" onclick="createQAExpiry()" style="width:100%;">建檔</button>
+            <div id="qaAddStatus" class="qa-add-status"></div>
+        </div>
+    </div>
+    <div id="qaBatchPanel" class="qa-add-panel no-print">
+        <textarea id="qaBatchInput" rows="6" placeholder="每行輸入一個 ID"></textarea>
+        <button class="btn-primary" onclick="renderQABatchSearch()" style="width:100%;">搜尋</button>
+        <div id="qaBatchSearchResult" class="qa-add-result" style="margin-top:10px;"></div>
+        <div id="qaBatchSelected" class="qa-add-selected"></div>
+        <div id="qaBatchDatePanel" style="display:none;">
+            <div class="qa-date-group">
+                <div class="qa-date-group-title">年份</div>
+                <div id="qaBatchYearButtons" class="qa-date-buttons"></div>
+            </div>
+            <div class="qa-date-group">
+                <div class="qa-date-group-title">月份</div>
+                <div id="qaBatchMonthButtons" class="qa-date-buttons"></div>
+            </div>
+            <div class="qa-date-group">
+                <div class="qa-date-group-title">日期</div>
+                <div id="qaBatchDayButtons" class="qa-date-buttons"></div>
+            </div>
+            <div class="qa-date-group">
+                <div class="qa-date-group-title">數量：<span id="qaBatchQtyDisplay">0</span></div>
+                <div id="qaBatchQtyButtons" class="qa-date-buttons"></div>
+            </div>
+            <button class="btn-primary" onclick="createQABatchExpiry()" style="width:100%;">建檔</button>
+            <div id="qaBatchStatus" class="qa-add-status"></div>
+        </div>
+    </div>
+    <div id="qaResultWrapper">
+        <div id="qaResult" class="print-container"></div>
+    </div>
+</div>

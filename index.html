@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>智慧零售管理系統 v5.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+<header>
+    <div class="header-stats" id="headerStats">資料統計：總導入 0 | 合併數 0 | 總筆數 0</div>
+    <div class="flex-row">
+        <input type="file" id="csvFile" accept=".csv" style="flex: 2; margin-bottom: 0;">
+        <button class="btn-primary" onclick="importCSV()">匯入 CSV</button>
+        <button class="btn-success" onclick="exportCSV()">匯出 CSV</button>
+    </div>
+    <div class="nav-buttons" id="mainNav" style="margin-top: 10px;"></div>
+</header>
+
+<main class="container" id="featureContainer"></main>
+<input type="date" id="hiddenDatePicker" style="position:fixed; top:-100px; left:-100px; opacity:0;">
+
+<script src="src/data/features.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>
