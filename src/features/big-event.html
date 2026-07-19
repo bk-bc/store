@@ -11,6 +11,7 @@
         <div class="nav-buttons" style="margin-bottom: 10px;">
             <button onclick="switchBigEventCreateMode('search')" id="bigEventCreateSearchMode" class="active">搜尋新增</button>
             <button onclick="switchBigEventCreateMode('activity')" id="bigEventCreateActivityMode">活動新增</button>
+            <button onclick="switchBigEventCreateMode('addon')" id="bigEventCreateAddonMode">加購</button>
         </div>
         <div id="bigEventSearchCreatePanel">
             <textarea id="bigEventSearchInput" rows="6" placeholder="每行輸入一個 ID 或 Name"></textarea>
@@ -19,6 +20,10 @@
         <div id="bigEventActivityCreatePanel" style="display:none;">
             <select id="bigEventActivitySelect"></select>
             <button class="btn-primary" onclick="addBigEventByActivity()" style="width:100%;">新增</button>
+        </div>
+        <div id="bigEventAddonCreatePanel" style="display:none;">
+            <textarea id="bigEventAddonInput" rows="6" placeholder="每行輸入一個 ID 或 Name"></textarea>
+            <button class="btn-primary" onclick="addBigEventAddons()" style="width:100%;">新增</button>
         </div>
         <div id="bigEventCreateStatus" class="qa-add-status"></div>
     </div>
@@ -38,11 +43,17 @@
     <div id="bigEventOrderPanel" style="display:none;">
         <div class="header-stats" id="bigEventOrderStats"></div>
         <div id="bigEventOrderResult"></div>
-        <button class="btn-primary no-print" onclick="saveBigEventOrders()" style="width:100%;">加入訂單</button>
+        <button class="btn-primary no-print" onclick="saveBigEventOrders()" style="width:100%;">更新訂單</button>
         <div id="bigEventOrderStatus" class="qa-add-status no-print"></div>
     </div>
 
     <div id="bigEventSettlementPanel" style="display:none;">
-        <div class="card">精算分頁先保留，等前面功能確認後再繼續。</div>
+        <div class="flex-row no-print">
+            <input type="number" id="bigEventThresholdInput" min="1" step="1" value="1000" placeholder="滿額門檻">
+            <input type="number" id="bigEventTargetOrdersInput" min="1" step="1" value="1" placeholder="滿額訂單數">
+        </div>
+        <button class="btn-primary no-print" onclick="calculateBigEventSettlement()" style="width:100%;">開始精算</button>
+        <div id="bigEventSettlementSummary" class="qa-add-status"></div>
+        <div id="bigEventSettlementResult"></div>
     </div>
 </div>
