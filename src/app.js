@@ -81,6 +81,7 @@ function switchTab(tabId) {
     document.getElementById(tabId).classList.add('active');
     document.getElementById(`btn-${tabId}`).classList.add('active');
     
+    if(tabId === 'add') switchAddMode('normal');
     if(tabId === 'search') { document.getElementById('searchKeyword1').value=''; document.getElementById('searchKeyword2').value=''; populateSearchDropdowns(); renderSearch(); }
     if(tabId === 'error') renderError();
     if(tabId === 'qa') switchQAMode('list');

@@ -1,5 +1,16 @@
 // --- 1. 新增功能 ---
-function renderAddType() { }
+function renderAddType() {
+    switchAddMode('normal');
+}
+
+function switchAddMode(mode) {
+    const isPrice = mode === 'price';
+    document.getElementById('addNormalPanel').style.display = isPrice ? 'none' : 'block';
+    document.getElementById('addPricePanel').style.display = isPrice ? 'block' : 'none';
+    document.getElementById('addModeNormal').classList.toggle('active', !isPrice);
+    document.getElementById('addModePrice').classList.toggle('active', isPrice);
+}
+
 function addItems() {
     const type = document.getElementById('addType').value;
     const text = document.getElementById('addInput').value;
@@ -19,5 +30,27 @@ function addItems() {
     stats.merged += merged;
     saveData();
     document.getElementById('addInput').value = '';
+    alert(`成功處理 ${processed} 筆資料\n(新增或衝突 ${added} 筆，成功合併 ${merged} 筆)`);
+}
+
+function addItemsWithPrice() {
+    const type = document.getElementById('addPriceType').value;
+    const text = document.getElementById('addPriceInput').value;
+    const lines = text.split('\n').filter(l => l.trim());
+    let processed = 0; let added = 0; let merged = 0;
+    lines.forEach(line => {
+        const [ID, Name, Price] = line.split('/');
+        if (ID && Name && Price !== undefined) {
+            processed++;
+            let newItem = { Type: type, ID: ID.trim(), Name: Name.trim(), C1: '未分類', Expiry: '', Event: '', Locked: 'False', Down: 'False', Price: normalizePrice(Price) };
+            let res = upsertItem(newItem);
+            added += res.imported;
+            merged += res.merged;
+        }
+    });
+    stats.imported += processed;
+    stats.merged += merged;
+    saveData();
+    document.getElementById('addPriceInput').value = '';
     alert(`成功處理 ${processed} 筆資料\n(新增或衝突 ${added} 筆，成功合併 ${merged} 筆)`);
 }
