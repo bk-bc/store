@@ -1,4 +1,21 @@
 <div id="price" class="section">
-    <div class="header-stats" id="priceStats"></div>
-    <div id="priceResult"></div>
+    <div class="nav-buttons no-print" style="margin-bottom: 10px;">
+        <button onclick="switchPriceMode('random')" id="priceModeRandom" class="active">隨機</button>
+        <button onclick="switchPriceMode('batch')" id="priceModeBatch">批量</button>
+    </div>
+    <div id="priceRandomPanel">
+        <div class="header-stats" id="priceStats"></div>
+        <div id="priceResult"></div>
+    </div>
+    <div id="priceBatchPanel" class="qa-add-panel no-print" style="display:none;">
+        <textarea id="priceBatchInput" rows="6" placeholder="每行輸入一個 ID 或 Name"></textarea>
+        <button class="btn-primary" onclick="renderPriceBatchSearch()" style="width:100%;">搜尋</button>
+        <div id="priceBatchSearchResult" class="qa-add-result" style="margin-top:10px;"></div>
+        <div id="priceBatchSelected" class="qa-add-selected"></div>
+        <div id="priceBatchEditPanel" style="display:none;">
+            <input type="text" id="priceBatchPriceInput" inputmode="decimal" placeholder="輸入價格" autocomplete="off">
+            <button class="btn-primary" onclick="updateBatchPrice()" style="width:100%;">更新</button>
+        </div>
+        <div id="priceBatchStatus" class="qa-add-status"></div>
+    </div>
 </div>

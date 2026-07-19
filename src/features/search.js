@@ -30,6 +30,10 @@ function clearOrder() {
     renderSearch();
 }
 
+function renderSearchPriceBadge(item) {
+    return `<span class="price-badge no-print">$${normalizePrice(item.Price)}</span>`;
+}
+
 function renderSearch() {
     const isFresh = document.getElementById('freshFoodCheck').checked;
     const c1 = document.getElementById('searchC1').value;
@@ -115,7 +119,7 @@ function renderSearch() {
                 if (item.Type === 'I35') {
                     card.innerHTML = `
                         ${downLabel}
-                        <div class="card-title">${item.Name} (${item.Type})</div>
+                        <div class="card-title">${item.Name}${renderSearchPriceBadge(item)} (${item.Type})</div>
                         <div class="card-actions no-print">
                             <button class="btn-warning"  onclick="showI35Barcode('${item.ID}', 0, 3, 'bc_${globalIdx}')">3</button>
                             <button class="btn-warning"  onclick="showI35Barcode('${item.ID}', 0, 5, 'bc_${globalIdx}')">5</button>
@@ -128,7 +132,7 @@ function renderSearch() {
                     // I24：直接顯示今日+明日兩條 EAN13 條碼，不顯示按鈕
                     card.innerHTML = `
                         ${downLabel}
-                        <div class="card-title">${item.Name} (${item.Type})</div>
+                        <div class="card-title">${item.Name}${renderSearchPriceBadge(item)} (${item.Type})</div>
                         <div class="barcode-wrapper"><svg id="bc_${globalIdx}_0" class="barcode"></svg></div>
                         <div class="barcode-wrapper"><svg id="bc_${globalIdx}_1" class="barcode"></svg></div>
                     `;
@@ -137,7 +141,7 @@ function renderSearch() {
                 const hideNormalShortcuts = !isFresh && !showShortcuts;
                 card.innerHTML = `
                     ${downLabel}
-                    <div class="card-title">${item.Name}</div>
+                    <div class="card-title">${item.Name}${renderSearchPriceBadge(item)}</div>
                     <div class="card-sub">${item.C1} | ${item.Event}</div>
                     <div class="barcode-wrapper"><svg id="bc_${globalIdx}" class="barcode"></svg></div>
                     <div class="card-actions no-print" style="display: ${hideNormalShortcuts ? 'none' : 'flex'};">
