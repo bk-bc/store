@@ -56,6 +56,7 @@ window.onload = async () => {
             }
             item.Down = normalizeBool(item.Down ?? item.down);
             item.Price = normalizePrice(item.Price);
+            normalizeBigEventFields(item);
             if (!item.C1) item.C1 = '未分類';
             item.Expiry = cleanArrayStr(item.Expiry, true);
             item.Event = cleanArrayStr(item.Event, false, item.Name, item.ID);
@@ -86,6 +87,7 @@ function switchTab(tabId) {
     if(tabId === 'error') renderError();
     if(tabId === 'qa') switchQAMode('list');
     if(tabId === 'price') renderPrice();
+    if(tabId === 'bigEvent') renderBigEvent();
     if(tabId === 'classify') renderClassify();
     if(tabId === 'activity') renderActivity();
 }
@@ -136,6 +138,29 @@ function normalizeBool(value) {
 function normalizePrice(value) {
     if (value === undefined || value === null || value === '') return '0';
     return String(value).trim() || '0';
+}
+
+function normalizeTextField(value) {
+    if (value === undefined || value === null) return '';
+    return String(value).trim();
+}
+
+function normalizeBigEventFields(item) {
+    item.Event_S = normalizeTextField(item.Event_S);
+    item.Event_P = normalizeTextField(item.Event_P);
+    item.Event_M = normalizeTextField(item.Event_M);
+    item.Event_N = normalizeTextField(item.Event_N);
+}
+
+function mergeSupplementalFields(target, source) {
+    if (normalizePrice(target.Price) === '0' && normalizePrice(source.Price) !== '0') {
+        target.Price = normalizePrice(source.Price);
+    }
+    ['Event_S', 'Event_P', 'Event_M', 'Event_N'].forEach(field => {
+        if (!normalizeTextField(target[field]) && normalizeTextField(source[field])) {
+            target[field] = normalizeTextField(source[field]);
+        }
+    });
 }
 
 function updateStatsUI() {
@@ -207,6 +232,7 @@ function renderBarcode(targetId, value, format) {
 function upsertItem(newItem) {
     newItem.Down = normalizeBool(newItem.Down ?? newItem.down);
     newItem.Price = normalizePrice(newItem.Price);
+    normalizeBigEventFields(newItem);
     const namePrefix = newItem.Name.substring(0, 6);
     const isSixDigits = /^\d{6}$/.test(namePrefix);
     if (!isSixDigits) {
@@ -239,6 +265,7 @@ function upsertItem(newItem) {
     let perfectMatch = existing.find(e => e.Name === newItem.Name && e.Type === newItem.Type && e.C1 === newItem.C1);
     if (perfectMatch) {
         if (newItem.Locked === 'True') perfectMatch.Locked = 'True';
+        mergeSupplementalFields(perfectMatch, newItem);
         return { imported: 0, merged: 1 };
     }
     let lockedExisting = existing.filter(e => e.Locked === 'True');
@@ -273,13 +300,13 @@ function importCSV() {
             if (!lines[i].trim()) continue;
             const parts = lines[i].split(',').map(s => s.trim().replace(/^"|"$/g, ''));
             if (parts.length < 7) continue;
-            let [Type, ID, Name, C1, Expiry, Event, Locked, Down, Price] = parts;
+            let [Type, ID, Name, C1, Expiry, Event, Locked, Down, Price, Event_S, Event_P, Event_M, Event_N] = parts;
             Type = Type.toUpperCase();
             Locked = (Locked === 'True') ? 'True' : 'False';
             Down = normalizeBool(Down);
             Price = normalizePrice(Price);
             processedCount++;
-            let newItem = {Type, ID, Name, C1, Expiry, Event, Locked, Down, Price};
+            let newItem = {Type, ID, Name, C1, Expiry, Event, Locked, Down, Price, Event_S, Event_P, Event_M, Event_N};
             let res = upsertItem(newItem);
             newAddCount += res.imported;
             newMergeCount += res.merged;
@@ -291,15 +318,17 @@ function importCSV() {
         if (document.getElementById('search').classList.contains('active')) renderSearch();
         if (document.getElementById('error').classList.contains('active')) renderError();
         if (document.getElementById('price').classList.contains('active')) renderPrice();
+        if (document.getElementById('bigEvent').classList.contains('active')) renderBigEvent();
     };
     reader.readAsText(file);
 }
 
 function exportCSV() {
-    let csv = "Type,ID,Name,C1,Expiry,Event,Locked,down,Price\n";
+    let csv = "Type,ID,Name,C1,Expiry,Event,Locked,down,Price,Event_S,Event_P,Event_M,Event_N\n";
     db.forEach(row => {
         const downValue = normalizeBool(row.Down ?? row.down) === 'True' ? 'true' : 'false';
-        csv += `"${row.Type}","${row.ID}","${row.Name}","${row.C1}","${row.Expiry}","${row.Event}","${row.Locked}","${downValue}","${normalizePrice(row.Price)}"\n`;
+        normalizeBigEventFields(row);
+        csv += `"${row.Type}","${row.ID}","${row.Name}","${row.C1}","${row.Expiry}","${row.Event}","${row.Locked}","${downValue}","${normalizePrice(row.Price)}","${row.Event_S}","${row.Event_P}","${row.Event_M}","${row.Event_N}"\n`;
     });
     const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");

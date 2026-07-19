@@ -1,0 +1,48 @@
+<div id="bigEvent" class="section">
+    <div class="nav-buttons no-print" style="margin-bottom: 10px;">
+        <button onclick="switchBigEventMode('create')" id="bigEventModeCreate" class="active">建檔</button>
+        <button onclick="switchBigEventMode('discount')" id="bigEventModeDiscount">折扣</button>
+        <button onclick="switchBigEventMode('order')" id="bigEventModeOrder">訂單</button>
+        <button onclick="switchBigEventMode('settlement')" id="bigEventModeSettlement">精算</button>
+        <button class="btn-danger" onclick="clearBigEventFields()">清除</button>
+    </div>
+
+    <div id="bigEventCreatePanel">
+        <div class="nav-buttons" style="margin-bottom: 10px;">
+            <button onclick="switchBigEventCreateMode('search')" id="bigEventCreateSearchMode" class="active">搜尋新增</button>
+            <button onclick="switchBigEventCreateMode('activity')" id="bigEventCreateActivityMode">活動新增</button>
+        </div>
+        <div id="bigEventSearchCreatePanel">
+            <textarea id="bigEventSearchInput" rows="6" placeholder="每行輸入一個 ID 或 Name"></textarea>
+            <button class="btn-primary" onclick="addBigEventBySearch()" style="width:100%;">新增</button>
+        </div>
+        <div id="bigEventActivityCreatePanel" style="display:none;">
+            <select id="bigEventActivitySelect"></select>
+            <button class="btn-primary" onclick="addBigEventByActivity()" style="width:100%;">新增</button>
+        </div>
+        <div id="bigEventCreateStatus" class="qa-add-status"></div>
+    </div>
+
+    <div id="bigEventDiscountPanel" class="qa-add-panel no-print" style="display:none;">
+        <div class="header-stats" id="bigEventDiscountStats"></div>
+        <div id="bigEventDiscountResult" class="qa-add-result"></div>
+        <div id="bigEventDiscountSelected" class="qa-add-selected"></div>
+        <div id="bigEventDiscountEditPanel" style="display:none;">
+            <input type="text" id="bigEventDiscountPriceInput" inputmode="decimal" placeholder="輸入折扣數字">
+            <div id="bigEventMultiplierButtons" class="qa-date-buttons"></div>
+            <button class="btn-primary" onclick="createBigEventDiscount()" style="width:100%;">折扣建立</button>
+            <div id="bigEventDiscountStatus" class="qa-add-status"></div>
+        </div>
+    </div>
+
+    <div id="bigEventOrderPanel" style="display:none;">
+        <div class="header-stats" id="bigEventOrderStats"></div>
+        <div id="bigEventOrderResult"></div>
+        <button class="btn-primary no-print" onclick="saveBigEventOrders()" style="width:100%;">加入訂單</button>
+        <div id="bigEventOrderStatus" class="qa-add-status no-print"></div>
+    </div>
+
+    <div id="bigEventSettlementPanel" style="display:none;">
+        <div class="card">精算分頁先保留，等前面功能確認後再繼續。</div>
+    </div>
+</div>

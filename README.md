@@ -13,6 +13,7 @@
 - `src/features/error.html` / `error.js`：勘誤。
 - `src/features/qa.html` / `qa.js`：品保。
 - `src/features/price.html` / `price.js`：價格，包含隨機補價與批量搜尋更新。
+- `src/features/big-event.html` / `big-event.js`：大檔活動，包含建檔、折扣、訂單、精算佔位與清除。
 - `src/features/classify.html` / `classify.js`：分類。
 - `src/features/activity.html` / `activity.js`：活動。
 

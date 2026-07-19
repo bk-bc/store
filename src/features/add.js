@@ -20,7 +20,7 @@ function addItems() {
         const [ID, Name] = line.split('/');
         if (ID && Name) {
             processed++;
-            let newItem = { Type: type, ID: ID.trim(), Name: Name.trim(), C1: '未分類', Expiry: '', Event: '', Locked: 'False', Down: 'False', Price: '0' };
+            let newItem = { Type: type, ID: ID.trim(), Name: Name.trim(), C1: '未分類', Expiry: '', Event: '', Locked: 'False', Down: 'False', Price: '0', Event_S: '', Event_P: '', Event_M: '', Event_N: '' };
             let res = upsertItem(newItem);
             added += res.imported;
             merged += res.merged;
@@ -42,7 +42,7 @@ function addItemsWithPrice() {
         const [ID, Name, Price] = line.split('/');
         if (ID && Name && Price !== undefined) {
             processed++;
-            let newItem = { Type: type, ID: ID.trim(), Name: Name.trim(), C1: '未分類', Expiry: '', Event: '', Locked: 'False', Down: 'False', Price: normalizePrice(Price) };
+            let newItem = { Type: type, ID: ID.trim(), Name: Name.trim(), C1: '未分類', Expiry: '', Event: '', Locked: 'False', Down: 'False', Price: normalizePrice(Price), Event_S: '', Event_P: '', Event_M: '', Event_N: '' };
             let res = upsertItem(newItem);
             added += res.imported;
             merged += res.merged;
