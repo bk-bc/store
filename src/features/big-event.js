@@ -358,11 +358,10 @@ function getBigEventSettlementAddons() {
 
 function calculateBigEventSettlement() {
     const threshold = Math.round(parseFloat(document.getElementById('bigEventThresholdInput').value));
-    const targetOrders = parseInt(document.getElementById('bigEventTargetOrdersInput').value, 10);
+    const tolerance = 10;
     const summary = document.getElementById('bigEventSettlementSummary');
     const result = document.getElementById('bigEventSettlementResult');
     if (!threshold || threshold <= 0) return alert('請輸入有效滿額門檻');
-    if (!targetOrders || targetOrders <= 0) return alert('請輸入有效滿額訂單數');
 
     const rows = getBigEventSettlementRows();
     const addons = getBigEventSettlementAddons();
@@ -372,6 +371,9 @@ function calculateBigEventSettlement() {
         return;
     }
 
+    const requiredAmount = rows.reduce((sum, row) => sum + (row.packPrice * row.demandPacks), 0);
+    const baseOrders = Math.max(1, Math.ceil(requiredAmount / threshold));
+    const targetOrders = baseOrders + Math.floor(baseOrders / 8);
     const workingRows = rows.map(row => ({ ...row, remainingPacks: row.demandPacks }));
     const orders = Array.from({ length: targetOrders }, (_, index) => ({
         title: `滿額訂單 ${index + 1}`,
@@ -382,7 +384,7 @@ function calculateBigEventSettlement() {
     const remainder = { title: '未滿額剩餘訂單', lines: [], total: 0, gift: false };
 
     orders.forEach(order => {
-        const combo = selectBigEventOrderCombo(workingRows, threshold, addons);
+        const combo = selectBigEventOrderCombo(workingRows, threshold, tolerance, addons);
         combo.requiredCounts.forEach((packs, rowIdx) => {
             if (packs <= 0) return;
             addBigEventSettlementLine(order, workingRows[rowIdx], packs, false);
@@ -397,9 +399,8 @@ function calculateBigEventSettlement() {
     const fullOrders = orders.filter(order => order.total >= threshold).length;
     const extraAmount = orders.reduce((sum, order) => sum + order.lines.filter(line => line.addon).reduce((lineSum, line) => lineSum + line.amount, 0), 0);
     const overAmount = orders.reduce((sum, order) => sum + Math.max(0, order.total - threshold), 0);
-    const requiredAmount = rows.reduce((sum, row) => sum + (row.packPrice * row.demandPacks), 0);
 
-    summary.innerText = `滿額 ${fullOrders}/${targetOrders} 筆 | 必買 $${requiredAmount} | 加購 $${extraAmount} | 超額 $${overAmount}`;
+    summary.innerText = `滿額 ${fullOrders}/${targetOrders} 筆 | 必買 $${requiredAmount} | 加購 $${extraAmount} | 超額 $${overAmount} | 可接受 ${threshold}-${threshold + tolerance}`;
     result.innerHTML = [...orders, remainder].filter(order => order.lines.length > 0).map(order => renderBigEventSettlementOrder(order, threshold)).join('');
 }
 
@@ -417,7 +418,7 @@ function addBigEventSettlementLine(order, row, packs, addon) {
     order.total += amount;
 }
 
-function selectBigEventOrderCombo(rows, threshold, addons) {
+function selectBigEventOrderCombo(rows, threshold, tolerance, addons) {
     const availableRows = rows.filter(row => row.remainingPacks > 0 && row.packPrice > 0);
     if (availableRows.length === 0) {
         return { requiredCounts: rows.map(() => 0), addonLines: fillBigEventOrderWithAddons(threshold, addons) };
@@ -455,6 +456,7 @@ function selectBigEventOrderCombo(rows, threshold, addons) {
         const score = {
             addonAmount,
             over: Math.max(0, total - threshold),
+            toleranceMiss: getBigEventToleranceMiss(total, threshold, tolerance),
             addonQty,
             lineCount: dp[amount].filter(Boolean).length + addonLines.length,
             requiredAmount: amount,
@@ -469,11 +471,21 @@ function selectBigEventOrderCombo(rows, threshold, addons) {
 }
 
 function compareBigEventComboScore(a, b) {
+    if (a.toleranceMiss !== b.toleranceMiss) return a.toleranceMiss - b.toleranceMiss;
+    if (a.toleranceMiss === 0 && a.addonAmount !== b.addonAmount) return a.addonAmount - b.addonAmount;
     if (a.over !== b.over) return a.over - b.over;
+    if (a.toleranceMiss !== 0 && a.addonAmount !== b.addonAmount) return a.addonAmount - b.addonAmount;
+    if (a.requiredAmount !== b.requiredAmount) return b.requiredAmount - a.requiredAmount;
     if (a.addonAmount !== b.addonAmount) return a.addonAmount - b.addonAmount;
     if (a.addonQty !== b.addonQty) return a.addonQty - b.addonQty;
     if (a.lineCount !== b.lineCount) return a.lineCount - b.lineCount;
-    return b.requiredAmount - a.requiredAmount;
+    return 0;
+}
+
+function getBigEventToleranceMiss(total, threshold, tolerance) {
+    if (total >= threshold && total <= threshold + tolerance) return 0;
+    if (total > threshold + tolerance) return total - (threshold + tolerance);
+    return threshold - total;
 }
 
 function fillBigEventOrderWithAddons(deficit, addons) {

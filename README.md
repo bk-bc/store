@@ -14,6 +14,7 @@
 - `src/features/qa.html` / `qa.js`：品保。
 - `src/features/price.html` / `price.js`：價格，包含隨機補價與批量搜尋更新。
 - `src/features/big-event.html` / `big-event.js`：大檔活動，包含建檔、折扣、訂單、精算與清除；`Event_S` 數字為一般活動，`A-Z` 為加購品，精算會混搭必買品並用勾選加購品補滿額。
+- 精算滿額門檻採用輸入值到輸入值 +10 的可接受區間，訂單筆數由必買總額自動推算，每 8 筆額外多拆 1 筆。
 - `src/features/classify.html` / `classify.js`：分類。
 - `src/features/activity.html` / `activity.js`：活動。
 
