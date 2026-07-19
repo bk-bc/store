@@ -372,6 +372,7 @@ function calculateBigEventSettlement() {
         return;
     }
 
+    const workingRows = rows.map(row => ({ ...row, remainingPacks: row.demandPacks }));
     const orders = Array.from({ length: targetOrders }, (_, index) => ({
         title: `滿額訂單 ${index + 1}`,
         lines: [],
@@ -379,29 +380,19 @@ function calculateBigEventSettlement() {
         gift: true,
     }));
     const remainder = { title: '未滿額剩餘訂單', lines: [], total: 0, gift: false };
-    let currentOrder = 0;
-
-    rows.forEach(row => {
-        let remaining = row.demandPacks;
-        while (remaining > 0) {
-            const order = currentOrder < targetOrders ? orders[currentOrder] : remainder;
-            const room = currentOrder < targetOrders ? Math.max(0, threshold - order.total) : Infinity;
-            let usePacks = currentOrder < targetOrders ? Math.min(remaining, Math.max(1, Math.floor(room / row.packPrice))) : remaining;
-            if (currentOrder < targetOrders && order.total + (usePacks * row.packPrice) < threshold && usePacks < remaining) {
-                usePacks++;
-            }
-            addBigEventSettlementLine(order, row, usePacks, false);
-            remaining -= usePacks;
-            if (currentOrder < targetOrders && order.total >= threshold) currentOrder++;
-        }
-    });
 
     orders.forEach(order => {
-        if (order.total >= threshold) return;
-        const addonResult = fillBigEventOrderWithAddons(order, threshold, addons);
-        addonResult.forEach(line => order.lines.push(line));
+        const combo = selectBigEventOrderCombo(workingRows, threshold, addons);
+        combo.requiredCounts.forEach((packs, rowIdx) => {
+            if (packs <= 0) return;
+            addBigEventSettlementLine(order, workingRows[rowIdx], packs, false);
+            workingRows[rowIdx].remainingPacks -= packs;
+        });
+        combo.addonLines.forEach(line => order.lines.push(line));
         order.total = order.lines.reduce((sum, line) => sum + line.amount, 0);
     });
+
+    workingRows.forEach(row => addBigEventSettlementLine(remainder, row, row.remainingPacks, false));
 
     const fullOrders = orders.filter(order => order.total >= threshold).length;
     const extraAmount = orders.reduce((sum, order) => sum + order.lines.filter(line => line.addon).reduce((lineSum, line) => lineSum + line.amount, 0), 0);
@@ -426,8 +417,66 @@ function addBigEventSettlementLine(order, row, packs, addon) {
     order.total += amount;
 }
 
-function fillBigEventOrderWithAddons(order, threshold, addons) {
-    const deficit = threshold - order.total;
+function selectBigEventOrderCombo(rows, threshold, addons) {
+    const availableRows = rows.filter(row => row.remainingPacks > 0 && row.packPrice > 0);
+    if (availableRows.length === 0) {
+        return { requiredCounts: rows.map(() => 0), addonLines: fillBigEventOrderWithAddons(threshold, addons) };
+    }
+
+    const maxRequiredPrice = Math.max(...availableRows.map(row => row.packPrice));
+    const cap = threshold + maxRequiredPrice - 1;
+    const rowIndexes = availableRows.map(row => rows.indexOf(row));
+    const dp = Array.from({ length: cap + 1 }, () => null);
+    dp[0] = rows.map(() => 0);
+
+    availableRows.forEach((row, localIdx) => {
+        const rowIdx = rowIndexes[localIdx];
+        for (let amount = cap; amount >= 0; amount--) {
+            if (!dp[amount]) continue;
+            for (let packs = 1; packs <= row.remainingPacks; packs++) {
+                const next = amount + (row.packPrice * packs);
+                if (next > cap) break;
+                if (dp[next]) continue;
+                const counts = [...dp[amount]];
+                counts[rowIdx] += packs;
+                dp[next] = counts;
+            }
+        }
+    });
+
+    let best = null;
+    for (let amount = 1; amount <= cap; amount++) {
+        if (!dp[amount]) continue;
+        const addonLines = amount >= threshold ? [] : fillBigEventOrderWithAddons(threshold - amount, addons);
+        if (amount < threshold && addonLines.length === 0) continue;
+        const addonAmount = addonLines.reduce((sum, line) => sum + line.amount, 0);
+        const addonQty = addonLines.reduce((sum, line) => sum + line.qty, 0);
+        const total = amount + addonAmount;
+        const score = {
+            addonAmount,
+            over: Math.max(0, total - threshold),
+            addonQty,
+            lineCount: dp[amount].filter(Boolean).length + addonLines.length,
+            requiredAmount: amount,
+        };
+        if (!best || compareBigEventComboScore(score, best.score) < 0) {
+            best = { requiredCounts: dp[amount], addonLines, score };
+        }
+    }
+
+    if (best) return best;
+    return { requiredCounts: rows.map(() => 0), addonLines: fillBigEventOrderWithAddons(threshold, addons) };
+}
+
+function compareBigEventComboScore(a, b) {
+    if (a.over !== b.over) return a.over - b.over;
+    if (a.addonAmount !== b.addonAmount) return a.addonAmount - b.addonAmount;
+    if (a.addonQty !== b.addonQty) return a.addonQty - b.addonQty;
+    if (a.lineCount !== b.lineCount) return a.lineCount - b.lineCount;
+    return b.requiredAmount - a.requiredAmount;
+}
+
+function fillBigEventOrderWithAddons(deficit, addons) {
     if (deficit <= 0 || addons.length === 0) return [];
     const maxPrice = Math.max(...addons.map(addon => addon.packPrice));
     const limit = Math.ceil((deficit + maxPrice) * 2);
@@ -470,7 +519,7 @@ function renderBigEventSettlementOrder(order, threshold) {
             ${order.lines.map(line => `
                 <div class="big-event-settlement-line">
                     <span>${line.seq} ${line.name}${line.addon ? '（加購）' : ''}</span>
-                    <span>${line.qty} 件 / ${line.packs} 組 / $${line.amount}</span>
+                    <span>${line.qty} 件 / $${line.amount}</span>
                 </div>
             `).join('')}
         </div>
