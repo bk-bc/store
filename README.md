@@ -8,7 +8,7 @@
 - `src/styles.css`：原本的全部樣式。
 - `src/app.js`：共用資料狀態、匯入匯出、切換頁籤、條碼與合併工具。
 - `src/data/features.js`：功能清單，控制導覽順序、功能畫面檔與功能程式檔。
-- `src/features/add.html` / `add.js`：新增。
+- `src/features/add.html` / `add.js`：新增，包含一般新增與加價格。
 - `src/features/search.html` / `search.js`：搜尋。
 - `src/features/error.html` / `error.js`：勘誤。
 - `src/features/qa.html` / `qa.js`：品保。
