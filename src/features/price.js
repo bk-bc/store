@@ -1,6 +1,7 @@
 // --- 價格頁面 ---
 let currentPriceItemIndex = null;
 let currentBatchPriceItemIndex = null;
+let completedBatchPriceIndexes = new Set();
 
 function getMissingPriceItems() {
     return db
@@ -71,11 +72,12 @@ function updatePrice() {
     renderRandomPrice();
 }
 
-function renderPriceBatchSearch() {
+function renderPriceBatchSearch(resetCompleted = false) {
     const input = document.getElementById('priceBatchInput');
     const resDiv = document.getElementById('priceBatchSearchResult');
     const lines = input.value.split('\n').map(line => line.trim()).filter(Boolean);
     document.getElementById('priceBatchStatus').innerText = '';
+    if (resetCompleted) completedBatchPriceIndexes = new Set();
 
     currentBatchPriceItemIndex = null;
     renderPriceBatchSelected();
@@ -100,7 +102,7 @@ function renderPriceBatchSearch() {
 
         if (foundItems.length > 0) {
             foundItems.forEach(({ item, idx }) => {
-                if (!seenIndexes.has(idx)) {
+                if (!seenIndexes.has(idx) && !completedBatchPriceIndexes.has(idx)) {
                     seenIndexes.add(idx);
                     matches.push({ item, idx });
                 }
@@ -163,6 +165,7 @@ function updateBatchPrice() {
 
     const updatedText = `已更新：${item.ID} $${value}`;
     item.Price = value;
+    completedBatchPriceIndexes.add(currentBatchPriceItemIndex);
     saveData();
     renderPriceBatchSearch();
     document.getElementById('priceBatchStatus').innerText = updatedText;
