@@ -88,6 +88,46 @@ button { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; f
 .flex-row { display: flex; gap: 10px; flex-wrap: nowrap; align-items: center; margin-bottom: 10px; }
 .flex-row > * { flex: 1; }
 
+.big-event-order-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 112px;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    margin-bottom: 5px;
+}
+.big-event-order-title {
+    font-size: 0.92em;
+    font-weight: bold;
+    line-height: 1.2;
+    word-break: break-all;
+}
+.big-event-order-meta {
+    color: #666;
+    font-size: 0.75em;
+    line-height: 1.2;
+    margin-top: 2px;
+}
+.big-event-order-controls {
+    display: grid;
+    grid-template-columns: 58px 46px;
+    align-items: center;
+    gap: 6px;
+}
+.big-event-order-input {
+    padding: 4px 5px;
+    margin-bottom: 0;
+    min-height: 30px;
+    font-size: 15px;
+    text-align: center;
+}
+.big-event-order-calc {
+    color: #555;
+    font-size: 0.8em;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
 svg.barcode { width: 100%; max-height: 80px; }
 
 /* 品保：動態多頁分欄，基準為A4列印寬度 */

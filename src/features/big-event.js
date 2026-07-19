@@ -220,11 +220,15 @@ function renderBigEventOrder() {
         const savedOrder = normalizeTextField(item.Event_N);
         const initialCalc = savedOrder ? (parseFloat(savedOrder) || 0) * multiplier : 0;
         return `
-            <div class="card">
-                <div class="card-title">${item.Event_S} ${item.Name}</div>
-                <div class="card-sub">折扣: ${normalizeTextField(item.Event_P) || '未建'} | 倍數: ${normalizeTextField(item.Event_M) || '未建'} | 已訂: ${savedOrder || '未建'}</div>
-                <input type="number" min="0" step="1" class="big-event-order-input" data-idx="${idx}" value="${savedOrder}" oninput="updateBigEventOrderCalc(${idx})" placeholder="輸入訂單數字">
-                <div class="header-stats">計算：<span id="bigEventOrderCalc_${idx}">${initialCalc}</span></div>
+            <div class="card big-event-order-card">
+                <div class="big-event-order-info">
+                    <div class="big-event-order-title">${item.Event_S} ${item.Name}</div>
+                    <div class="big-event-order-meta">折扣 ${normalizeTextField(item.Event_P) || '未建'} | 倍數 ${normalizeTextField(item.Event_M) || '未建'} | 已訂 ${savedOrder || '未建'}</div>
+                </div>
+                <div class="big-event-order-controls">
+                    <input type="number" min="0" step="1" class="big-event-order-input" data-idx="${idx}" value="${savedOrder}" oninput="updateBigEventOrderCalc(${idx})" placeholder="數量">
+                    <div class="big-event-order-calc">= <span id="bigEventOrderCalc_${idx}">${initialCalc}</span></div>
+                </div>
             </div>
         `;
     }).join('') || '<div class="card">目前沒有 Event_S 已建檔項目。</div>';
