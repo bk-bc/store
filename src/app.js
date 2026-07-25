@@ -330,9 +330,21 @@ function exportCSV() {
         normalizeBigEventFields(row);
         csv += `"${row.Type}","${row.ID}","${row.Name}","${row.C1}","${row.Expiry}","${row.Event}","${row.Locked}","${downValue}","${normalizePrice(row.Price)}","${row.Event_S}","${row.Event_P}","${row.Event_M}","${row.Event_N}"\n`;
     });
+    downloadCSV(csv, `零售資料庫_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+function exportViewCSV() {
+    let csv = "Type,ID,Name,Event\n";
+    db.forEach(row => {
+        csv += `"${row.Type}","${row.ID}","${row.Name}","${row.Event}"\n`;
+    });
+    downloadCSV(csv, `零售資料庫_檢視版_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+function downloadCSV(csv, filename) {
     const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `零售資料庫_${new Date().toISOString().slice(0,10)}.csv`;
+    link.download = filename;
     link.click();
 }
