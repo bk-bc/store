@@ -30,11 +30,7 @@ function searchActivity() {
     const lines = inputText.split('\n').map(line => line.trim()).filter(Boolean);
     let foundItems = [], missingItems = [];
     lines.forEach(keyword => {
-        const lowerKW = keyword.toLowerCase();
-        let match = db.find(item => 
-            (item.ID && item.ID.toLowerCase().includes(lowerKW)) || 
-            (item.Name && item.Name.toLowerCase().includes(lowerKW))
-        );
+        let match = findActivityMatchesNameFirst(keyword)[0];
         if (match) foundItems.push(match);
         else missingItems.push(keyword);
     });
@@ -72,6 +68,17 @@ function searchActivity() {
     }
 }
 
+function findActivityMatchesNameFirst(keyword) {
+    const lowerKW = keyword.trim().toLowerCase();
+    const nameMatches = db.filter(item =>
+        item.Name && item.Name.toLowerCase().includes(lowerKW)
+    );
+    if (nameMatches.length > 0) return nameMatches;
+    return db.filter(item =>
+        item.ID && item.ID.toLowerCase().includes(lowerKW)
+    );
+}
+
 function copyMissingToClipboard() {
     const textArea = document.getElementById('missingItemsTextarea');
     if (textArea) { textArea.select(); document.execCommand('copy'); alert('未找到名單已複製！'); }
@@ -85,10 +92,7 @@ function addActivity() {
     let added = 0;
     let seq = 1;
     keywords.forEach(kw => {
-        let matches = db.filter(i => 
-            (i.Name && i.Name.toLowerCase().includes(kw.trim().toLowerCase())) || 
-            (i.ID && i.ID.toLowerCase().includes(kw.trim().toLowerCase()))
-        );
+        let matches = findActivityMatchesNameFirst(kw);
         matches.forEach(item => {
             item.Event = item.Event.split('/').filter(e => e.replace(/_\d{3}$/, '') !== evName).join('/');
             let seqStr = seq.toString().padStart(3, '0');
