@@ -14,6 +14,7 @@ header {
 .header-stats { font-size: 0.85em; color: #666; margin-bottom: 5px; }
 .nav-buttons { display: flex; flex-wrap: wrap; gap: 5px; }
 .nav-buttons button { flex: 1 1 auto; padding: 8px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 4px; cursor: pointer; }
+.nav-buttons button.needs-attention:not(.active) { background: #fff3cd; border-color: #ffe08a; color: #7a5200; }
 .nav-buttons button.active { background: var(--primary); color: white; border-color: var(--primary); }
 
 /* Layout & Cards */

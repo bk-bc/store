@@ -8,13 +8,14 @@
 - `src/styles.css`：原本的全部樣式。
 - `src/app.js`：共用資料狀態、匯入匯出、切換頁籤、條碼與合併工具。
 - `src/data/features.js`：功能清單，控制導覽順序、功能畫面檔與功能程式檔。
-- `src/features/add.html` / `add.js`：新增，包含一般新增與加價格。
+- `src/features/add.html` / `add.js`：新增，包含一般新增、加價格、新條碼、建檔與鮮食建檔。
 - `src/features/search.html` / `search.js`：搜尋，畫面結果會顯示價格，列印時隱藏價格。
 - `src/features/error.html` / `error.js`：勘誤。
 - `src/features/qa.html` / `qa.js`：品保。
 - `src/features/price.html` / `price.js`：價格，包含隨機補價與批量搜尋更新。
 - `src/features/big-event.html` / `big-event.js`：大檔活動，包含建檔、折扣、訂單、精算與清除；`Event_S` 數字為一般活動，`A-Z` 為加購品，精算會混搭必買品並用勾選加購品補滿額。
 - 精算滿額門檻採用輸入值到輸入值 +10 的可接受區間，訂單筆數由必買總額自動推算，每 8 筆額外多拆 1 筆。
+- 主導覽的價格、分類、勘誤若有待處理資料，會以淡黃色提示，不顯示數量。
 - `src/features/classify.html` / `classify.js`：分類。
 - `src/features/activity.html` / `activity.js`：活動。
 

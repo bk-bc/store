@@ -168,10 +168,21 @@ function updateStatsUI() {
     const unclassifiedCount = db.filter(i => i.C1 === '未分類').length;
     const conflictCount = getConflictStats().conflicts.length;
     const missingPriceCount = db.filter(i => normalizePrice(i.Price) === '0').length;
-    document.getElementById('btn-classify').innerText = unclassifiedCount > 0 ? `分類(${unclassifiedCount})` : '分類';
-    document.getElementById('btn-error').innerText = conflictCount > 0 ? `勘誤(${conflictCount})` : '勘誤';
+    const classifyButton = document.getElementById('btn-classify');
+    const errorButton = document.getElementById('btn-error');
     const priceButton = document.getElementById('btn-price');
-    if (priceButton) priceButton.innerText = missingPriceCount > 0 ? `價格(${missingPriceCount})` : '價格';
+    if (classifyButton) {
+        classifyButton.innerText = '分類';
+        classifyButton.classList.toggle('needs-attention', unclassifiedCount > 0);
+    }
+    if (errorButton) {
+        errorButton.innerText = '勘誤';
+        errorButton.classList.toggle('needs-attention', conflictCount > 0);
+    }
+    if (priceButton) {
+        priceButton.innerText = '價格';
+        priceButton.classList.toggle('needs-attention', missingPriceCount > 0);
+    }
 }
 
 function getConflictStats() {

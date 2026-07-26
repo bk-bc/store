@@ -1,14 +1,31 @@
 // --- 1. 新增功能 ---
+let currentAddFileIndex = null;
+let currentAddFileType = 'EAN8';
+let currentFreshType = 'I24';
+let currentFreshId = '';
+
 function renderAddType() {
     switchAddMode('normal');
 }
 
 function switchAddMode(mode) {
-    const isPrice = mode === 'price';
-    document.getElementById('addNormalPanel').style.display = isPrice ? 'none' : 'block';
-    document.getElementById('addPricePanel').style.display = isPrice ? 'block' : 'none';
-    document.getElementById('addModeNormal').classList.toggle('active', !isPrice);
-    document.getElementById('addModePrice').classList.toggle('active', isPrice);
+    const panels = {
+        normal: 'addNormalPanel',
+        price: 'addPricePanel',
+        barcode: 'addBarcodePanel',
+        file: 'addFilePanel',
+        fresh: 'addFreshPanel',
+    };
+    Object.entries(panels).forEach(([key, id]) => {
+        document.getElementById(id).style.display = key === mode ? 'block' : 'none';
+    });
+    document.getElementById('addModeNormal').classList.toggle('active', mode === 'normal');
+    document.getElementById('addModePrice').classList.toggle('active', mode === 'price');
+    document.getElementById('addModeBarcode').classList.toggle('active', mode === 'barcode');
+    document.getElementById('addModeFile').classList.toggle('active', mode === 'file');
+    document.getElementById('addModeFresh').classList.toggle('active', mode === 'fresh');
+    if (mode === 'file') renderAddFile();
+    if (mode === 'fresh') renderFreshBarcodePreview();
 }
 
 function addItems() {
@@ -53,4 +70,131 @@ function addItemsWithPrice() {
     saveData();
     document.getElementById('addPriceInput').value = '';
     alert(`成功處理 ${processed} 筆資料\n(新增或衝突 ${added} 筆，成功合併 ${merged} 筆)`);
+}
+
+function createEmptyRetailItem(type, id, name, price = '0') {
+    return { Type: type, ID: id, Name: name, C1: '未分類', Expiry: '', Event: '', Locked: 'False', Down: 'False', Price: normalizePrice(price), Event_S: '', Event_P: '', Event_M: '', Event_N: '' };
+}
+
+function addNewBarcodes() {
+    const text = document.getElementById('addBarcodeInput').value;
+    const ids = text.split('\n').map(line => line.trim()).filter(Boolean);
+    let skipped = 0;
+    let added = 0;
+    ids.forEach(id => {
+        if (db.some(item => item.ID === id)) {
+            skipped++;
+            return;
+        }
+        const res = upsertItem(createEmptyRetailItem('', id, '000000'));
+        added += res.imported;
+    });
+    stats.imported += added;
+    saveData();
+    document.getElementById('addBarcodeInput').value = '';
+    document.getElementById('addBarcodeStatus').innerText = `新增 ${added} 筆，略過已存在 ${skipped} 筆`;
+}
+
+function getPendingAddFileItems() {
+    return db
+        .map((item, idx) => ({ item, idx }))
+        .filter(({ item }) => item.Name === '000000');
+}
+
+function renderAddFile() {
+    const result = document.getElementById('addFileResult');
+    const pending = getPendingAddFileItems();
+    if (!result) return;
+    if (pending.length === 0) {
+        currentAddFileIndex = null;
+        result.innerHTML = '<div class="card">目前沒有 Name 為 000000 的待建檔項目。</div>';
+        return;
+    }
+    const pick = pending[Math.floor(Math.random() * pending.length)];
+    currentAddFileIndex = pick.idx;
+    currentAddFileType = pick.item.Type || 'EAN8';
+    result.innerHTML = `
+        <div class="card">
+            <div class="card-title">${pick.item.ID}</div>
+            <div class="nav-buttons" style="margin-bottom: 10px;">
+                <button onclick="selectAddFileType('EAN8')" id="addFileTypeEAN8">EAN8</button>
+                <button onclick="selectAddFileType('EAN13')" id="addFileTypeEAN13">EAN13</button>
+                <button onclick="selectAddFileType('UPCA')" id="addFileTypeUPCA">UPCA</button>
+                <button onclick="selectAddFileType('UPCE')" id="addFileTypeUPCE">UPCE</button>
+            </div>
+            <div class="barcode-wrapper"><svg id="addFileBarcode" class="barcode"></svg></div>
+            <input type="text" id="addFileNameInput" placeholder="輸入 Name">
+            <button class="btn-primary" onclick="saveAddFileItem()" style="width:100%;">建檔</button>
+            <div id="addFileStatus" class="qa-add-status"></div>
+        </div>
+    `;
+    selectAddFileType(currentAddFileType);
+}
+
+function selectAddFileType(type) {
+    currentAddFileType = type;
+    ['EAN8', 'EAN13', 'UPCA', 'UPCE'].forEach(option => {
+        const btn = document.getElementById(`addFileType${option}`);
+        if (btn) btn.classList.toggle('active', option === type);
+    });
+    const item = db[currentAddFileIndex];
+    if (item) renderBarcode('addFileBarcode', item.ID, type);
+}
+
+function saveAddFileItem() {
+    const item = db[currentAddFileIndex];
+    const input = document.getElementById('addFileNameInput');
+    if (!item || !input) return;
+    const name = input.value.trim();
+    if (!name) return alert('請輸入 Name');
+    item.Type = currentAddFileType;
+    item.Name = name;
+    saveData();
+    renderAddFile();
+}
+
+function calcEAN8Check(digits7) {
+    let sum = 0;
+    for (let i = 0; i < 7; i++) {
+        sum += parseInt(digits7[i], 10) * (i % 2 === 0 ? 3 : 1);
+    }
+    return ((10 - (sum % 10)) % 10).toString();
+}
+
+function renderFreshBarcodePreview() {
+    const input = document.getElementById('addFreshNameInput');
+    const preview = document.getElementById('addFreshIdPreview');
+    if (!input || !preview) return;
+    const name = input.value.trim();
+    const prefix = name.substring(0, 6);
+    if (!/^\d{6}$/.test(prefix)) {
+        currentFreshId = '';
+        preview.innerText = '前六字需為數字';
+        document.getElementById('addFreshBarcode').innerHTML = '';
+        return;
+    }
+    const digits7 = `2${prefix}`;
+    currentFreshId = `${digits7}${calcEAN8Check(digits7)}`;
+    preview.innerText = currentFreshId;
+    renderBarcode('addFreshBarcode', currentFreshId, 'EAN8');
+}
+
+function selectFreshType(type) {
+    currentFreshType = type;
+    document.getElementById('addFreshTypeI24').classList.toggle('active', type === 'I24');
+    document.getElementById('addFreshTypeI35').classList.toggle('active', type === 'I35');
+}
+
+function addFreshItem() {
+    const input = document.getElementById('addFreshNameInput');
+    const name = input.value.trim();
+    renderFreshBarcodePreview();
+    if (!currentFreshId) return alert('Name 前六字必須是數字');
+    if (db.some(item => item.ID === currentFreshId)) return alert('此 ID 已存在');
+    const res = upsertItem(createEmptyRetailItem(currentFreshType, currentFreshId, name));
+    stats.imported += res.imported;
+    saveData();
+    input.value = '';
+    document.getElementById('addFreshStatus').innerText = `已新增：${currentFreshId}`;
+    renderFreshBarcodePreview();
 }
