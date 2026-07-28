@@ -3,8 +3,6 @@ let currentAddFileIndex = null;
 let currentAddFileType = 'EAN8';
 let currentAddItemFileIndex = null;
 let currentAddItemFileType = 'EAN8';
-let currentFreshType = 'I24';
-let currentFreshId = '';
 
 function renderAddType() {
     switchAddMode('normal');
@@ -18,7 +16,6 @@ function switchAddMode(mode) {
         file: 'addFilePanel',
         itemCode: 'addItemCodePanel',
         itemFile: 'addItemFilePanel',
-        fresh: 'addFreshPanel',
     };
     Object.entries(panels).forEach(([key, id]) => {
         document.getElementById(id).style.display = key === mode ? 'block' : 'none';
@@ -29,10 +26,8 @@ function switchAddMode(mode) {
     document.getElementById('addModeFile').classList.toggle('active', mode === 'file');
     document.getElementById('addModeItemCode').classList.toggle('active', mode === 'itemCode');
     document.getElementById('addModeItemFile').classList.toggle('active', mode === 'itemFile');
-    document.getElementById('addModeFresh').classList.toggle('active', mode === 'fresh');
     if (mode === 'file') renderAddFile();
     if (mode === 'itemFile') renderAddItemFile();
-    if (mode === 'fresh') renderFreshBarcodePreview();
 }
 
 function addItems() {
@@ -211,6 +206,8 @@ function renderAddItemFile() {
                 <button onclick="selectAddItemFileType('EAN13')" id="addItemFileTypeEAN13">EAN13</button>
                 <button onclick="selectAddItemFileType('UPCA')" id="addItemFileTypeUPCA">UPCA</button>
                 <button onclick="selectAddItemFileType('UPCE')" id="addItemFileTypeUPCE">UPCE</button>
+                <button onclick="selectAddItemFileType('I35')" id="addItemFileTypeI35">I35</button>
+                <button onclick="selectAddItemFileType('I24')" id="addItemFileTypeI24">I24</button>
             </div>
             <div class="barcode-wrapper"><svg id="addItemFileBarcode" class="barcode"></svg></div>
             <button class="btn-primary" onclick="saveAddItemFileItem()" style="width:100%;">建檔</button>
@@ -222,7 +219,7 @@ function renderAddItemFile() {
 
 function selectAddItemFileType(type) {
     currentAddItemFileType = type;
-    ['EAN8', 'EAN13', 'UPCA', 'UPCE'].forEach(option => {
+    ['EAN8', 'EAN13', 'UPCA', 'UPCE', 'I35', 'I24'].forEach(option => {
         const btn = document.getElementById(`addItemFileType${option}`);
         if (btn) btn.classList.toggle('active', option === type);
     });
@@ -258,42 +255,4 @@ function calcEAN8Check(digits7) {
         sum += parseInt(digits7[i], 10) * (i % 2 === 0 ? 3 : 1);
     }
     return ((10 - (sum % 10)) % 10).toString();
-}
-
-function renderFreshBarcodePreview() {
-    const input = document.getElementById('addFreshNameInput');
-    const preview = document.getElementById('addFreshIdPreview');
-    if (!input || !preview) return;
-    const name = input.value.trim();
-    const prefix = name.substring(0, 6);
-    if (!/^\d{6}$/.test(prefix)) {
-        currentFreshId = '';
-        preview.innerText = '前六字需為數字';
-        document.getElementById('addFreshBarcode').innerHTML = '';
-        return;
-    }
-    const digits7 = `2${prefix}`;
-    currentFreshId = `${digits7}${calcEAN8Check(digits7)}`;
-    preview.innerText = currentFreshId;
-    renderBarcode('addFreshBarcode', currentFreshId, 'EAN8');
-}
-
-function selectFreshType(type) {
-    currentFreshType = type;
-    document.getElementById('addFreshTypeI24').classList.toggle('active', type === 'I24');
-    document.getElementById('addFreshTypeI35').classList.toggle('active', type === 'I35');
-}
-
-function addFreshItem() {
-    const input = document.getElementById('addFreshNameInput');
-    const name = input.value.trim();
-    renderFreshBarcodePreview();
-    if (!currentFreshId) return alert('Name 前六字必須是數字');
-    if (db.some(item => item.ID === currentFreshId)) return alert('此 ID 已存在');
-    const res = upsertItem(createEmptyRetailItem(currentFreshType, currentFreshId, name));
-    stats.imported += res.imported;
-    saveData();
-    input.value = '';
-    document.getElementById('addFreshStatus').innerText = `已新增：${currentFreshId}`;
-    renderFreshBarcodePreview();
 }

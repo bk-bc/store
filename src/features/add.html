@@ -7,7 +7,6 @@
         <button onclick="switchAddMode('file')" id="addModeFile">條碼建檔</button>
         <button onclick="switchAddMode('itemCode')" id="addModeItemCode">新品號</button>
         <button onclick="switchAddMode('itemFile')" id="addModeItemFile">品號建檔</button>
-        <button onclick="switchAddMode('fresh')" id="addModeFresh">鮮食建檔</button>
     </div>
     <div id="addNormalPanel">
         <select id="addType">
@@ -42,18 +41,5 @@
     </div>
     <div id="addItemFilePanel" style="display:none;">
         <div id="addItemFileResult"></div>
-    </div>
-    <div id="addFreshPanel" style="display:none;">
-        <input type="text" id="addFreshNameInput" placeholder="輸入鮮食名稱，前六字需為數字" oninput="renderFreshBarcodePreview()">
-        <div class="card">
-            <div class="card-title" id="addFreshIdPreview">尚未產生 ID</div>
-            <div class="barcode-wrapper"><svg id="addFreshBarcode" class="barcode"></svg></div>
-        </div>
-        <div class="nav-buttons" style="margin-bottom: 10px;">
-            <button onclick="selectFreshType('I24')" id="addFreshTypeI24" class="active">I24</button>
-            <button onclick="selectFreshType('I35')" id="addFreshTypeI35">I35</button>
-        </div>
-        <button class="btn-primary" onclick="addFreshItem()" style="width: 100%;">新增</button>
-        <div id="addFreshStatus" class="qa-add-status"></div>
     </div>
 </div>
