@@ -223,7 +223,25 @@ function selectAddItemFileType(type) {
         const btn = document.getElementById(`addItemFileType${option}`);
         if (btn) btn.classList.toggle('active', option === type);
     });
+    if (type === 'I35' || type === 'I24') {
+        fillAddItemFileFreshId();
+    }
     renderAddItemFileBarcode();
+}
+
+function fillAddItemFileFreshId() {
+    const item = db[currentAddItemFileIndex];
+    const input = document.getElementById('addItemFileIdInput');
+    const status = document.getElementById('addItemFileStatus');
+    if (!item || !input) return;
+    const prefix = item.Name.substring(0, 6);
+    if (!/^\d{6}$/.test(prefix)) {
+        if (status) status.innerText = 'Name 前六字需為數字，無法自動產生 ID';
+        return;
+    }
+    const digits7 = `2${prefix}`;
+    input.value = `${digits7}${calcEAN8Check(digits7)}`;
+    if (status) status.innerText = '';
 }
 
 function renderAddItemFileBarcode() {
