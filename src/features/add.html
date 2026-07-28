@@ -4,7 +4,9 @@
         <button onclick="switchAddMode('normal')" id="addModeNormal" class="active">一般新增</button>
         <button onclick="switchAddMode('price')" id="addModePrice">加價格</button>
         <button onclick="switchAddMode('barcode')" id="addModeBarcode">新條碼</button>
-        <button onclick="switchAddMode('file')" id="addModeFile">建檔</button>
+        <button onclick="switchAddMode('file')" id="addModeFile">條碼建檔</button>
+        <button onclick="switchAddMode('itemCode')" id="addModeItemCode">新品號</button>
+        <button onclick="switchAddMode('itemFile')" id="addModeItemFile">品號建檔</button>
         <button onclick="switchAddMode('fresh')" id="addModeFresh">鮮食建檔</button>
     </div>
     <div id="addNormalPanel">
@@ -32,6 +34,14 @@
     </div>
     <div id="addFilePanel" style="display:none;">
         <div id="addFileResult"></div>
+    </div>
+    <div id="addItemCodePanel" style="display:none;">
+        <textarea id="addItemCodeInput" rows="6" placeholder="每行輸入一個新 Name"></textarea>
+        <button class="btn-primary" onclick="addNewItemCodes()" style="width: 100%;">新增</button>
+        <div id="addItemCodeStatus" class="qa-add-status"></div>
+    </div>
+    <div id="addItemFilePanel" style="display:none;">
+        <div id="addItemFileResult"></div>
     </div>
     <div id="addFreshPanel" style="display:none;">
         <input type="text" id="addFreshNameInput" placeholder="輸入鮮食名稱，前六字需為數字" oninput="renderFreshBarcodePreview()">

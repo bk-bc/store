@@ -1,6 +1,8 @@
 // --- 1. 新增功能 ---
 let currentAddFileIndex = null;
 let currentAddFileType = 'EAN8';
+let currentAddItemFileIndex = null;
+let currentAddItemFileType = 'EAN8';
 let currentFreshType = 'I24';
 let currentFreshId = '';
 
@@ -14,6 +16,8 @@ function switchAddMode(mode) {
         price: 'addPricePanel',
         barcode: 'addBarcodePanel',
         file: 'addFilePanel',
+        itemCode: 'addItemCodePanel',
+        itemFile: 'addItemFilePanel',
         fresh: 'addFreshPanel',
     };
     Object.entries(panels).forEach(([key, id]) => {
@@ -23,8 +27,11 @@ function switchAddMode(mode) {
     document.getElementById('addModePrice').classList.toggle('active', mode === 'price');
     document.getElementById('addModeBarcode').classList.toggle('active', mode === 'barcode');
     document.getElementById('addModeFile').classList.toggle('active', mode === 'file');
+    document.getElementById('addModeItemCode').classList.toggle('active', mode === 'itemCode');
+    document.getElementById('addModeItemFile').classList.toggle('active', mode === 'itemFile');
     document.getElementById('addModeFresh').classList.toggle('active', mode === 'fresh');
     if (mode === 'file') renderAddFile();
+    if (mode === 'itemFile') renderAddItemFile();
     if (mode === 'fresh') renderFreshBarcodePreview();
 }
 
@@ -151,6 +158,98 @@ function saveAddFileItem() {
     item.Name = name;
     saveData();
     renderAddFile();
+}
+
+function addNewItemCodes() {
+    const text = document.getElementById('addItemCodeInput').value;
+    const names = text.split('\n').map(line => line.trim()).filter(Boolean);
+    let skipped = 0;
+    let added = 0;
+    let invalid = 0;
+    names.forEach(name => {
+        if (db.some(item => item.Name === name)) {
+            skipped++;
+            return;
+        }
+        if (!/^\d{6}/.test(name.substring(0, 6))) {
+            invalid++;
+            return;
+        }
+        db.push(createEmptyRetailItem('', '00000000000000', name));
+        added++;
+    });
+    stats.imported += added;
+    saveData();
+    document.getElementById('addItemCodeInput').value = '';
+    document.getElementById('addItemCodeStatus').innerText = `新增 ${added} 筆，略過已存在 ${skipped} 筆，格式不符 ${invalid} 筆`;
+}
+
+function getPendingAddItemFileItems() {
+    return db
+        .map((item, idx) => ({ item, idx }))
+        .filter(({ item }) => item.ID === '00000000000000');
+}
+
+function renderAddItemFile() {
+    const result = document.getElementById('addItemFileResult');
+    const pending = getPendingAddItemFileItems();
+    if (!result) return;
+    if (pending.length === 0) {
+        currentAddItemFileIndex = null;
+        result.innerHTML = '<div class="card">目前沒有 ID 為 00000000000000 的待建檔項目。</div>';
+        return;
+    }
+    const pick = pending[Math.floor(Math.random() * pending.length)];
+    currentAddItemFileIndex = pick.idx;
+    currentAddItemFileType = pick.item.Type || 'EAN8';
+    result.innerHTML = `
+        <div class="card">
+            <div class="card-title">${pick.item.Name}</div>
+            <input type="text" id="addItemFileIdInput" placeholder="輸入 ID" oninput="renderAddItemFileBarcode()">
+            <div class="nav-buttons" style="margin-bottom: 10px;">
+                <button onclick="selectAddItemFileType('EAN8')" id="addItemFileTypeEAN8">EAN8</button>
+                <button onclick="selectAddItemFileType('EAN13')" id="addItemFileTypeEAN13">EAN13</button>
+                <button onclick="selectAddItemFileType('UPCA')" id="addItemFileTypeUPCA">UPCA</button>
+                <button onclick="selectAddItemFileType('UPCE')" id="addItemFileTypeUPCE">UPCE</button>
+            </div>
+            <div class="barcode-wrapper"><svg id="addItemFileBarcode" class="barcode"></svg></div>
+            <button class="btn-primary" onclick="saveAddItemFileItem()" style="width:100%;">建檔</button>
+            <div id="addItemFileStatus" class="qa-add-status"></div>
+        </div>
+    `;
+    selectAddItemFileType(currentAddItemFileType);
+}
+
+function selectAddItemFileType(type) {
+    currentAddItemFileType = type;
+    ['EAN8', 'EAN13', 'UPCA', 'UPCE'].forEach(option => {
+        const btn = document.getElementById(`addItemFileType${option}`);
+        if (btn) btn.classList.toggle('active', option === type);
+    });
+    renderAddItemFileBarcode();
+}
+
+function renderAddItemFileBarcode() {
+    const input = document.getElementById('addItemFileIdInput');
+    const svg = document.getElementById('addItemFileBarcode');
+    if (!input || !svg) return;
+    const id = input.value.trim();
+    svg.innerHTML = '';
+    if (!id) return;
+    renderBarcode('addItemFileBarcode', id, currentAddItemFileType);
+}
+
+function saveAddItemFileItem() {
+    const item = db[currentAddItemFileIndex];
+    const input = document.getElementById('addItemFileIdInput');
+    if (!item || !input) return;
+    const id = input.value.trim();
+    if (!id) return alert('請輸入 ID');
+    if (db.some((row, idx) => idx !== currentAddItemFileIndex && row.ID === id)) return alert('此 ID 已存在');
+    item.Type = currentAddItemFileType;
+    item.ID = id;
+    saveData();
+    renderAddItemFile();
 }
 
 function calcEAN8Check(digits7) {
