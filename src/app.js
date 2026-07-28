@@ -228,6 +228,8 @@ function renderBarcode(targetId, value, format) {
             fmt = 'UPCE';       // JsBarcode 支援 UPCE
         } else if (format === 'I35' || format === 'I24') {
             fmt = 'EAN8';
+        } else if (format === 'CODE39') {
+            fmt = 'CODE39';
         } else {
             fmt = 'CODE128';
         }

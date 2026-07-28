@@ -200,6 +200,7 @@ function renderAddItemFile() {
     result.innerHTML = `
         <div class="card">
             <div class="card-title">${pick.item.Name}</div>
+            <div class="barcode-wrapper"><svg id="addItemFileNameBarcode" class="barcode"></svg></div>
             <input type="text" id="addItemFileIdInput" placeholder="輸入 ID" oninput="renderAddItemFileBarcode()">
             <div class="nav-buttons" style="margin-bottom: 10px;">
                 <button onclick="selectAddItemFileType('EAN8')" id="addItemFileTypeEAN8">EAN8</button>
@@ -214,7 +215,18 @@ function renderAddItemFile() {
             <div id="addItemFileStatus" class="qa-add-status"></div>
         </div>
     `;
+    renderAddItemFileNameBarcode();
     selectAddItemFileType(currentAddItemFileType);
+}
+
+function renderAddItemFileNameBarcode() {
+    const item = db[currentAddItemFileIndex];
+    const svg = document.getElementById('addItemFileNameBarcode');
+    if (!item || !svg) return;
+    const prefix = item.Name.substring(0, 6);
+    svg.innerHTML = '';
+    if (!prefix) return;
+    renderBarcode('addItemFileNameBarcode', prefix, 'CODE39');
 }
 
 function selectAddItemFileType(type) {
