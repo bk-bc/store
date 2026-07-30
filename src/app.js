@@ -83,7 +83,14 @@ function switchTab(tabId) {
     document.getElementById(`btn-${tabId}`).classList.add('active');
     
     if(tabId === 'add') switchAddMode('normal');
-    if(tabId === 'search') { document.getElementById('searchKeyword1').value=''; document.getElementById('searchKeyword2').value=''; populateSearchDropdowns(); renderSearch(); }
+    if(tabId === 'search') {
+        const keyword1 = document.getElementById('searchKeyword1');
+        document.getElementById('searchKeyword1').value='';
+        document.getElementById('searchKeyword2').value='';
+        populateSearchDropdowns();
+        renderSearch();
+        setTimeout(() => keyword1?.focus(), 0);
+    }
     if(tabId === 'error') renderError();
     if(tabId === 'qa') switchQAMode('list');
     if(tabId === 'price') renderPrice();

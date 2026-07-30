@@ -27,7 +27,10 @@ function switchAddMode(mode) {
     document.getElementById('addModeItemCode').classList.toggle('active', mode === 'itemCode');
     document.getElementById('addModeItemFile').classList.toggle('active', mode === 'itemFile');
     if (mode === 'file') renderAddFile();
-    if (mode === 'itemFile') renderAddItemFile();
+    if (mode === 'itemFile') {
+        renderAddItemFile();
+        setTimeout(() => document.getElementById('addItemFileIdInput')?.focus(), 0);
+    }
 }
 
 function addItems() {
