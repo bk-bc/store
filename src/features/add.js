@@ -3,6 +3,7 @@ let currentAddFileIndex = null;
 let currentAddFileType = 'EAN8';
 let currentAddItemFileIndex = null;
 let currentAddItemFileType = 'EAN8';
+let currentAddItemFileConflict = null;
 
 function renderAddType() {
     switchAddMode('normal');
@@ -29,7 +30,7 @@ function switchAddMode(mode) {
     if (mode === 'file') renderAddFile();
     if (mode === 'itemFile') {
         renderAddItemFile();
-        setTimeout(() => document.getElementById('addItemFileIdInput')?.focus(), 0);
+        focusAddItemFileIdInput();
     }
 }
 
@@ -200,11 +201,12 @@ function renderAddItemFile() {
     const pick = pending[Math.floor(Math.random() * pending.length)];
     currentAddItemFileIndex = pick.idx;
     currentAddItemFileType = pick.item.Type || 'EAN8';
+    currentAddItemFileConflict = null;
     result.innerHTML = `
         <div class="card">
             <div class="card-title">${pick.item.Name}</div>
             <div class="barcode-wrapper"><svg id="addItemFileNameBarcode" class="barcode"></svg></div>
-            <input type="text" id="addItemFileIdInput" placeholder="輸入 ID" oninput="renderAddItemFileBarcode()">
+            <input type="text" id="addItemFileIdInput" placeholder="輸入 ID" oninput="handleAddItemFileIdInput()">
             <div class="nav-buttons" style="margin-bottom: 10px;">
                 <button onclick="selectAddItemFileType('EAN8')" id="addItemFileTypeEAN8">EAN8</button>
                 <button onclick="selectAddItemFileType('EAN13')" id="addItemFileTypeEAN13">EAN13</button>
@@ -214,6 +216,7 @@ function renderAddItemFile() {
                 <button onclick="selectAddItemFileType('I24')" id="addItemFileTypeI24">I24</button>
             </div>
             <div class="barcode-wrapper"><svg id="addItemFileBarcode" class="barcode"></svg></div>
+            <div id="addItemFileConflict"></div>
             <button class="btn-primary" onclick="saveAddItemFileItem()" style="width:100%;">建檔</button>
             <div id="addItemFileStatus" class="qa-add-status"></div>
         </div>
@@ -232,6 +235,10 @@ function renderAddItemFileNameBarcode() {
     renderBarcode('addItemFileNameBarcode', prefix, 'CODE39');
 }
 
+function focusAddItemFileIdInput() {
+    setTimeout(() => document.getElementById('addItemFileIdInput')?.focus(), 0);
+}
+
 function selectAddItemFileType(type) {
     currentAddItemFileType = type;
     ['EAN8', 'EAN13', 'UPCA', 'UPCE', 'I35', 'I24'].forEach(option => {
@@ -240,6 +247,22 @@ function selectAddItemFileType(type) {
     });
     if (type === 'I35' || type === 'I24') {
         fillAddItemFileFreshId();
+    }
+    renderAddItemFileBarcode();
+}
+
+function handleAddItemFileIdInput() {
+    const input = document.getElementById('addItemFileIdInput');
+    const id = input ? input.value.trim() : '';
+    currentAddItemFileConflict = null;
+    renderAddItemFileConflict();
+    if (/^\d{12}$/.test(id)) {
+        selectAddItemFileType('UPCA');
+        return;
+    }
+    if (/^\d{13}$/.test(id)) {
+        selectAddItemFileType('EAN13');
+        return;
     }
     renderAddItemFileBarcode();
 }
@@ -259,6 +282,34 @@ function fillAddItemFileFreshId() {
     if (status) status.innerText = '';
 }
 
+function renderAddItemFileConflict() {
+    const target = document.getElementById('addItemFileConflict');
+    if (!target) return;
+    if (!currentAddItemFileConflict) {
+        target.innerHTML = '';
+        return;
+    }
+    const { existingItem, pendingItem, selectedName } = currentAddItemFileConflict;
+    target.innerHTML = `
+        <div class="qa-add-status">此 ID 已存在，請選擇要保留的 Name 後再按建檔。</div>
+        <div class="nav-buttons" style="margin-bottom: 10px;">
+            <button onclick="selectAddItemFileConflictName('existing')" id="addItemFileConflictExisting" class="${selectedName === existingItem.Name ? 'active' : ''}">${existingItem.Name}</button>
+            <button onclick="selectAddItemFileConflictName('pending')" id="addItemFileConflictPending" class="${selectedName === pendingItem.Name ? 'active' : ''}">${pendingItem.Name}</button>
+        </div>
+    `;
+}
+
+function selectAddItemFileConflictName(source) {
+    if (!currentAddItemFileConflict) return;
+    const selectedItem = source === 'existing'
+        ? currentAddItemFileConflict.existingItem
+        : currentAddItemFileConflict.pendingItem;
+    currentAddItemFileConflict.selectedSource = source;
+    currentAddItemFileConflict.selectedName = selectedItem.Name;
+    renderAddItemFileConflict();
+    focusAddItemFileIdInput();
+}
+
 function renderAddItemFileBarcode() {
     const input = document.getElementById('addItemFileIdInput');
     const svg = document.getElementById('addItemFileBarcode');
@@ -275,11 +326,38 @@ function saveAddItemFileItem() {
     if (!item || !input) return;
     const id = input.value.trim();
     if (!id) return alert('請輸入 ID');
-    if (db.some((row, idx) => idx !== currentAddItemFileIndex && row.ID === id)) return alert('此 ID 已存在');
+    const duplicateIndex = db.findIndex((row, idx) => idx !== currentAddItemFileIndex && row.ID === id);
+    if (duplicateIndex !== -1 && (!currentAddItemFileConflict || currentAddItemFileConflict.id !== id)) {
+        currentAddItemFileConflict = {
+            id,
+            existingItem: db[duplicateIndex],
+            pendingItem: item,
+            selectedSource: null,
+            selectedName: '',
+        };
+        renderAddItemFileConflict();
+        focusAddItemFileIdInput();
+        return;
+    }
+    if (currentAddItemFileConflict && currentAddItemFileConflict.id === id) {
+        if (!currentAddItemFileConflict.selectedName) return alert('請先選擇要保留的 Name');
+        const selectedItem = currentAddItemFileConflict.selectedSource === 'existing'
+            ? currentAddItemFileConflict.existingItem
+            : currentAddItemFileConflict.pendingItem;
+        const newItem = { ...selectedItem, Type: currentAddItemFileType, ID: id, Name: currentAddItemFileConflict.selectedName };
+        db = db.filter(row => row !== currentAddItemFileConflict.existingItem && row !== currentAddItemFileConflict.pendingItem);
+        db.push(newItem);
+        currentAddItemFileConflict = null;
+        saveData();
+        renderAddItemFile();
+        focusAddItemFileIdInput();
+        return;
+    }
     item.Type = currentAddItemFileType;
     item.ID = id;
     saveData();
     renderAddItemFile();
+    focusAddItemFileIdInput();
 }
 
 function calcEAN8Check(digits7) {
