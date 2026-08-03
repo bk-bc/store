@@ -63,6 +63,7 @@ header {
     white-space: nowrap;
 }
 .card-actions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.error-barcode-option { margin: 10px 0 14px; }
 .card-down { background-color: #ffe6ee; }
 .down-label {
     color: #c2185b;

@@ -49,14 +49,12 @@ function renderNamePrefixError() {
     document.getElementById('errorStats').innerText = `同品號不同ID | 總筆數: ${totalItems} | 總批數: ${totalBatches}`;
     const res = document.getElementById('errorResult');
     res.innerHTML = '';
-    conflicts.forEach(c => {
+    conflicts.forEach((c, groupIndex) => {
         const card = document.createElement('div');
         card.className = 'card';
         let html = `<div class="card-title">Name前六碼: ${escapeHtml(c.prefix)}</div>`;
         [
             { key: 'names', label: 'Name', colorClass: 'btn-yellow' },
-            { key: 'ids', label: 'ID', colorClass: 'btn-primary' },
-            { key: 'types', label: 'Type', colorClass: 'btn-pink' },
             { key: 'c1s', label: 'C1', colorClass: 'btn-lightblue' },
         ].forEach(cat => {
             html += `<div class="card-sub">${cat.label}</div><div class="card-actions">`;
@@ -65,8 +63,24 @@ function renderNamePrefixError() {
             });
             html += `</div>`;
         });
+        html += `<div class="card-sub">ID / Type</div>`;
+        html += c.group.map((item, itemIndex) => {
+            const svgId = `errorNamePrefixBarcode_${groupIndex}_${itemIndex}`;
+            return `
+                <div class="barcode-wrapper error-barcode-option">
+                    <button class="btn-primary" style="width:100%; margin-bottom:6px;" onclick="resolveNamePrefixIdentity(${jsString(c.prefix)}, ${jsString(item.ID)}, ${jsString(item.Type)})">${escapeHtml(item.ID)} / ${escapeHtml(item.Type)}</button>
+                    <svg id="${svgId}" class="barcode"></svg>
+                </div>
+            `;
+        }).join('');
+        if (c.canMerge) {
+            html += `<div class="card-actions" style="margin-top:15px;"><button class="btn-primary" style="width:100%" onclick="mergeNamePrefixConflict(${jsString(c.prefix)})">🔒鎖定合併</button></div>`;
+        }
         card.innerHTML = html;
         res.appendChild(card);
+        c.group.forEach((item, itemIndex) => {
+            renderBarcode(`errorNamePrefixBarcode_${groupIndex}_${itemIndex}`, item.ID, item.Type);
+        });
     });
 }
 
@@ -88,10 +102,11 @@ function getNamePrefixConflictStats() {
         const ids = uniqueValues(group.map(i => i.ID));
         const types = uniqueValues(group.map(i => i.Type));
         const c1s = uniqueValues(group.map(i => i.C1));
-        if (ids.length > 1 || names.length > 1 || types.length > 1 || c1s.length > 1) {
+        const canMerge = ids.length === 1 && names.length === 1 && types.length === 1 && c1s.length === 1;
+        if (ids.length > 1 || names.length > 1 || types.length > 1 || c1s.length > 1 || (canMerge && group.some(i => i.Locked !== 'True'))) {
             totalItems += group.length;
             totalBatches++;
-            conflicts.push({ prefix, group, names, ids, types, c1s });
+            conflicts.push({ prefix, group, names, ids, types, c1s, canMerge });
         }
     }
 
@@ -115,11 +130,35 @@ function resolveConflict(id, category, value) {
 function resolveNamePrefixConflict(prefix, category, value) {
     db.filter(item => String(item.Name || '').substring(0, 6) === prefix).forEach(item => {
         if(category === 'names') item.Name = value;
-        if(category === 'ids') item.ID = value;
-        if(category === 'types') item.Type = value;
         if(category === 'c1s') item.C1 = value;
     });
     saveData(); renderError();
+}
+
+function resolveNamePrefixIdentity(prefix, id, type) {
+    db.filter(item => String(item.Name || '').substring(0, 6) === prefix).forEach(item => {
+        item.ID = id;
+        item.Type = type;
+    });
+    saveData(); renderError();
+}
+
+function mergeNamePrefixConflict(prefix) {
+    const group = db.filter(item => String(item.Name || '').substring(0, 6) === prefix);
+    const ids = uniqueValues(group.map(i => i.ID));
+    const names = uniqueValues(group.map(i => i.Name));
+    const types = uniqueValues(group.map(i => i.Type));
+    const c1s = uniqueValues(group.map(i => i.C1));
+    if (ids.length !== 1 || names.length !== 1 || types.length !== 1 || c1s.length !== 1) {
+        alert('請先統一 Name、ID/Type、C1 後再合併');
+        return;
+    }
+    const sameIdOutsideGroup = db.some(item => item.ID === ids[0] && String(item.Name || '').substring(0, 6) !== prefix);
+    if (sameIdOutsideGroup) {
+        alert('此 ID 仍有其他品號資料，請先到「同ID不同品名」確認後再合併');
+        return;
+    }
+    mergeConflict(ids[0]);
 }
 
 function mergeConflict(id) {
