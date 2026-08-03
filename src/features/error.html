@@ -1,4 +1,8 @@
 <div id="error" class="section">
+    <div class="nav-buttons" style="margin-bottom: 10px;">
+        <button onclick="switchErrorMode('id')" id="errorModeId" class="active">同ID不同品名</button>
+        <button onclick="switchErrorMode('namePrefix')" id="errorModeNamePrefix">同品號不同ID</button>
+    </div>
     <div class="header-stats" id="errorStats"></div>
     <div id="errorResult"></div>
 </div>

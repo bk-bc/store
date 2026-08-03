@@ -20,16 +20,6 @@ function populateSearchDropdowns() {
     document.getElementById('searchEvent').innerHTML = evHtml;
 }
 
-function clearOrder() {
-    db.forEach(item => {
-        if(item.Event.includes('待訂貨')) {
-            item.Event = item.Event.split('/').filter(e => e !== '待訂貨').join('/');
-        }
-    });
-    saveData();
-    renderSearch();
-}
-
 function renderSearchPriceBadge(item) {
     return `<span class="price-badge no-print">$${normalizePrice(item.Price)}</span>`;
 }
@@ -146,7 +136,6 @@ function renderSearch() {
                     <div class="barcode-wrapper"><svg id="bc_${globalIdx}" class="barcode"></svg></div>
                     <div class="card-actions no-print" style="display: ${hideNormalShortcuts ? 'none' : 'flex'};">
                         <button class="btn-yellow" onclick="actionCard('${item.ID}', 'reclassify')">✋分類</button>
-                        <button class="btn-primary" onclick="actionCard('${item.ID}', 'order')">🛒訂貨</button>
                         <button class="btn-danger" onclick="actionCard('${item.ID}', 'delete')">🗑️刪除</button>
                         <button class="btn-lightblue" onclick="actionCard('${item.ID}', 'lock')">${item.Locked === 'True' ? '🔓解鎖' : '🔒鎖定'}</button>
                         <button class="btn-warning" onclick="toggleDown(${dbIdx})">${isDown ? '上架' : '下架'}</button>
@@ -218,11 +207,6 @@ function actionCard(id, action) {
         }
     } else if (action === 'lock') {
         item.Locked = item.Locked === 'True' ? 'False' : 'True';
-        saveData(); renderSearch();
-    } else if (action === 'order') {
-        let evArr = item.Event ? item.Event.split('/').filter(Boolean) : [];
-        if (!evArr.includes('待訂貨')) evArr.push('待訂貨');
-        item.Event = evArr.join('/');
         saveData(); renderSearch();
     } else if (action === 'reclassify') {
         const c1s = [...new Set(db.map(i=>i.C1).filter(Boolean))].sort((a,b) => a.localeCompare(b,'zh-TW'));

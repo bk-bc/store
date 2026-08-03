@@ -173,7 +173,8 @@ function mergeSupplementalFields(target, source) {
 function updateStatsUI() {
     document.getElementById('headerStats').innerText = `資料統計：總導入 ${stats.imported} | 合併數 ${stats.merged} | 總筆數 ${db.length}`;
     const unclassifiedCount = db.filter(i => i.C1 === '未分類').length;
-    const conflictCount = getConflictStats().conflicts.length;
+    const namePrefixConflictCount = typeof getNamePrefixConflictStats === 'function' ? getNamePrefixConflictStats().conflicts.length : 0;
+    const conflictCount = getConflictStats().conflicts.length + namePrefixConflictCount;
     const missingPriceCount = db.filter(i => normalizePrice(i.Price) === '0').length;
     const classifyButton = document.getElementById('btn-classify');
     const errorButton = document.getElementById('btn-error');
