@@ -32,12 +32,12 @@ function renderIdError() {
         ].forEach(cat => {
             html += `<div class="card-sub">${cat.label}</div><div class="card-actions">`;
             c[cat.key].forEach(val => {
-                html += `<button class="${cat.colorClass}" onclick="resolveConflict(${jsString(c.id)}, ${jsString(cat.key)}, ${jsString(val)})">${escapeHtml(val)}</button>`;
+                html += `<button class="${cat.colorClass}" onclick="resolveConflict(${jsAttrString(c.id)}, ${jsAttrString(cat.key)}, ${jsAttrString(val)})">${escapeHtml(val)}</button>`;
             });
             html += `</div>`;
         });
         if (c.types.length === 1 && c.names.length === 1 && c.c1s.length === 1) {
-            html += `<div class="card-actions" style="margin-top:15px;"><button class="btn-primary" style="width:100%" onclick="mergeConflict(${jsString(c.id)})">🔒鎖定合併</button></div>`;
+            html += `<div class="card-actions" style="margin-top:15px;"><button class="btn-primary" style="width:100%" onclick="mergeConflict(${jsAttrString(c.id)})">🔒鎖定合併</button></div>`;
         }
         card.innerHTML = html;
         res.appendChild(card);
@@ -59,7 +59,7 @@ function renderNamePrefixError() {
         ].forEach(cat => {
             html += `<div class="card-sub">${cat.label}</div><div class="card-actions">`;
             c[cat.key].forEach(val => {
-                html += `<button class="${cat.colorClass}" onclick="resolveNamePrefixConflict(${jsString(c.prefix)}, ${jsString(cat.key)}, ${jsString(val)})">${escapeHtml(val)}</button>`;
+                html += `<button class="${cat.colorClass}" onclick="resolveNamePrefixConflict(${jsAttrString(c.prefix)}, ${jsAttrString(cat.key)}, ${jsAttrString(val)})">${escapeHtml(val)}</button>`;
             });
             html += `</div>`;
         });
@@ -68,13 +68,13 @@ function renderNamePrefixError() {
             const svgId = `errorNamePrefixBarcode_${groupIndex}_${itemIndex}`;
             return `
                 <div class="barcode-wrapper error-barcode-option">
-                    <button class="btn-primary" style="width:100%; margin-bottom:6px;" onclick="resolveNamePrefixIdentity(${jsString(c.prefix)}, ${jsString(item.ID)}, ${jsString(item.Type)})">${escapeHtml(item.ID)} / ${escapeHtml(item.Type)}</button>
+                    <button class="btn-primary" style="width:100%; margin-bottom:6px;" onclick="resolveNamePrefixIdentity(${jsAttrString(c.prefix)}, ${jsAttrString(item.ID)}, ${jsAttrString(item.Type)})">${escapeHtml(item.ID)} / ${escapeHtml(item.Type)}</button>
                     <svg id="${svgId}" class="barcode"></svg>
                 </div>
             `;
         }).join('');
         if (c.canMerge) {
-            html += `<div class="card-actions" style="margin-top:15px;"><button class="btn-primary" style="width:100%" onclick="mergeNamePrefixConflict(${jsString(c.prefix)})">🔒鎖定合併</button></div>`;
+            html += `<div class="card-actions" style="margin-top:15px;"><button class="btn-primary" style="width:100%" onclick="mergeNamePrefixConflict(${jsAttrString(c.prefix)})">🔒鎖定合併</button></div>`;
         }
         card.innerHTML = html;
         res.appendChild(card);
@@ -176,6 +176,10 @@ function mergeConflict(id) {
 
 function jsString(value) {
     return JSON.stringify(String(value ?? ''));
+}
+
+function jsAttrString(value) {
+    return escapeHtml(jsString(value));
 }
 
 function escapeHtml(value) {
